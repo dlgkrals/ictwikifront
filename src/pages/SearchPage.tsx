@@ -19,9 +19,7 @@ export default function SearchPage() {
             <li key={doc.id} className="search-result-item">
               <Link to={`/wiki/${doc.id}`}>
                 <h3>{doc.title}</h3>
-                <p className="result-preview">
-                  {doc.content.slice(0, 150)}...
-                </p>
+                <p className="result-preview">{doc.content.slice(0, 150)}...</p>
               </Link>
             </li>
           ))}

@@ -1,24 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import type { TocItem, Section, WikiPart } from '../types';
 
 export default function WikiPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { getDocument, deleteDocument, updateDocument, documents } = useWiki();
   const navigate = useNavigate();
-  const document = getDocument(id);
+  const document = getDocument(id || '');
 
-  const [editingSection, setEditingSection] = useState(null);
+  const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
 
-  const generateSectionId = (title, index) => {
+  const generateSectionId = (title: string, index: number): string => {
     return `section-${index}-${title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9가-힣-]/g, '')}`;
   };
 
-  const tableOfContents = useMemo(() => {
+  const tableOfContents = useMemo((): TocItem[] => {
     if (!document) return [];
     const lines = document.content.split('\n');
-    const toc = [];
+    const toc: TocItem[] = [];
     let sectionIndex = 0;
 
     lines.forEach((line) => {
@@ -27,7 +28,7 @@ export default function WikiPage() {
       const h3Match = line.match(/^### (.+)$/);
 
       if (h1Match || h2Match || h3Match) {
-        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match[1];
+        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match![1];
         const level = h1Match ? 1 : h2Match ? 2 : 3;
         toc.push({
           title,
@@ -55,15 +56,15 @@ export default function WikiPage() {
 
   const handleDelete = () => {
     if (window.confirm('정말 이 문서를 삭제하시겠습니까?')) {
-      deleteDocument(id);
+      deleteDocument(id || '');
       navigate('/');
     }
   };
 
-  const parseSections = (content) => {
+  const parseSections = (content: string): Section[] => {
     const lines = content.split('\n');
-    const sections = [];
-    let currentSection = { title: '', level: 0, content: [], startIndex: 0 };
+    const sections: Section[] = [];
+    let currentSection: Section = { title: '', level: 0, content: [], startIndex: 0 };
     let sectionIndex = 0;
 
     lines.forEach((line, index) => {
@@ -75,7 +76,7 @@ export default function WikiPage() {
         if (currentSection.title || currentSection.content.length > 0) {
           sections.push({ ...currentSection });
         }
-        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match[1];
+        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match![1];
         currentSection = {
           title,
           level: h1Match ? 1 : h2Match ? 2 : 3,
@@ -96,7 +97,7 @@ export default function WikiPage() {
     return sections;
   };
 
-  const handleEditSection = (sectionIndex) => {
+  const handleEditSection = (sectionIndex: number) => {
     const sections = parseSections(document.content);
     const section = sections[sectionIndex];
     setEditingSection(sectionIndex);
@@ -112,8 +113,8 @@ export default function WikiPage() {
       return section;
     });
 
-    const newContent = newSections.map(s => s.content.join('\n')).join('\n');
-    updateDocument(id, document.title, newContent);
+    const newContent = newSections.map((s) => s.content.join('\n')).join('\n');
+    updateDocument(id || '', document.title, newContent);
     setEditingSection(null);
     setEditContent('');
   };
@@ -123,8 +124,8 @@ export default function WikiPage() {
     setEditContent('');
   };
 
-  const parseWikiLinks = (text) => {
-    const parts = [];
+  const parseWikiLinks = (text: string): WikiPart[] => {
+    const parts: WikiPart[] = [];
     let lastIndex = 0;
     const regex = /\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[([^\]]+)\]\]/g;
     let match;
@@ -150,13 +151,11 @@ export default function WikiPage() {
     return parts;
   };
 
-  const findDocumentByTitle = (title) => {
-    return documents.find(
-      (doc) => doc.title.toLowerCase() === title.toLowerCase()
-    );
+  const findDocumentByTitle = (title: string) => {
+    return documents.find((doc) => doc.title.toLowerCase() === title.toLowerCase());
   };
 
-  const renderTextWithLinks = (text) => {
+  const renderTextWithLinks = (text: string): ReactNode[] => {
     const parts = parseWikiLinks(text);
     return parts.map((part, i) => {
       if (part.type === 'link') {
@@ -181,7 +180,7 @@ export default function WikiPage() {
     });
   };
 
-  const renderLine = (line, index) => {
+  const renderLine = (line: string, index: number): ReactNode => {
     if (line.startsWith('### ')) {
       return <h3 key={index}>{renderTextWithLinks(line.slice(4))}</h3>;
     }
@@ -206,7 +205,7 @@ export default function WikiPage() {
     return <p key={index}>{renderTextWithLinks(line)}</p>;
   };
 
-  const scrollToSection = (sectionId) => {
+  const scrollToSection = (sectionId: string) => {
     const element = window.document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -306,9 +305,7 @@ export default function WikiPage() {
         </div>
       )}
 
-      <div className="page-content">
-        {renderSections()}
-      </div>
+      <div className="page-content">{renderSections()}</div>
     </div>
   );
 }

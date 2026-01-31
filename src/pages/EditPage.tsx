@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
 export default function EditPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { getDocument, updateDocument } = useWiki();
   const navigate = useNavigate();
-  const document = getDocument(id);
+  const document = getDocument(id || '');
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -26,13 +26,13 @@ export default function EditPage() {
     );
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
-    updateDocument(id, title, content);
+    updateDocument(id || '', title, content);
     navigate(`/wiki/${id}`);
   };
 
@@ -47,7 +47,7 @@ export default function EditPage() {
             id="title"
             className="form-input"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             placeholder="문서 제목"
           />
         </div>
@@ -57,7 +57,7 @@ export default function EditPage() {
             id="content"
             className="form-textarea"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
             placeholder="문서 내용을 입력하세요..."
             rows={20}
           />

@@ -345,9 +345,7 @@ body {
 
 .notice-section h2 {
   font-size: 18px;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--border-color);
+  margin: 0;
 }
 
 .notice-list {
@@ -850,4 +848,226 @@ body {
 .wiki-link-broken {
   color: #ba0000;
   cursor: help;
+}
+
+/* Notice Page */
+.notice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notice-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.notice-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-color);
+  width: 100%;
+}
+
+.notice-link:hover .notice-title {
+  text-decoration: underline;
+  color: var(--link-color);
+}
+
+.notice-form {
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.notice-stats {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.notice-list-full {
+  list-style: none;
+}
+
+.notice-list-item {
+  border-bottom: 1px solid #eee;
+}
+
+.notice-list-item .notice-link {
+  padding: 15px 10px;
+}
+
+.notice-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.notice-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+/* Notice Detail */
+.notice-detail-page .page-header {
+  margin-bottom: 20px;
+}
+
+.notice-header {
+  margin-bottom: 20px;
+}
+
+.notice-detail-page .notice-title {
+  font-size: 24px;
+  font-weight: normal;
+  margin-bottom: 10px;
+}
+
+.notice-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 20px;
+}
+
+.notice-content {
+  line-height: 1.8;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.notice-content h1 {
+  font-size: 22px;
+  margin: 20px 0 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.notice-content h2 {
+  font-size: 18px;
+  margin: 18px 0 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.notice-content h3 {
+  font-size: 16px;
+  margin: 15px 0 8px;
+}
+
+.notice-content p {
+  margin-bottom: 10px;
+}
+
+.notice-content li {
+  margin-left: 25px;
+  margin-bottom: 5px;
+}
+
+.notice-content code {
+  background-color: var(--sidebar-bg);
+  padding: 2px 6px;
+  font-family: monospace;
+}
+
+.notice-edit-form {
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+}
+
+.notice-edit-form .form-group {
+  margin-bottom: 15px;
+}
+
+.notice-edit-form .form-actions {
+  margin-top: 15px;
+}
+
+/* Login Page */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+}
+
+.login-container {
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.login-input {
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  outline: none;
+}
+
+.login-input:focus {
+  border-color: var(--primary-color);
+}
+
+.login-btn {
+  padding: 12px;
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.login-footer p {
+  font-size: 12px;
+  color: var(--text-muted);
 }

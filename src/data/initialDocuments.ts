@@ -1,4 +1,6 @@
-export const initialDocuments = [
+import type { Document } from '../types';
+
+export const initialDocuments: Document[] = [
   {
     id: 'test1',
     title: '테스트 문서 1',

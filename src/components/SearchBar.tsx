@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
@@ -7,19 +7,21 @@ export default function SearchBar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { setSearchQuery, documents } = useWiki();
   const navigate = useNavigate();
-  const wrapperRef = useRef(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const suggestions = query.trim()
-    ? documents.filter(
-        (doc) =>
-          doc.title.toLowerCase().includes(query.toLowerCase()) ||
-          doc.content.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 5)
+    ? documents
+        .filter(
+          (doc) =>
+            doc.title.toLowerCase().includes(query.toLowerCase()) ||
+            doc.content.toLowerCase().includes(query.toLowerCase())
+        )
+        .slice(0, 5)
     : [];
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     }
@@ -27,7 +29,7 @@ export default function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!query.trim()) return;
 
@@ -45,7 +47,7 @@ export default function SearchBar() {
     setQuery('');
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     setShowSuggestions(true);
   };

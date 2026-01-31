@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
-function getRelativeTime(dateString) {
+function getRelativeTime(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);
-  const diffInSeconds = Math.floor((now - date) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
     return `${diffInSeconds}초 전`;
@@ -38,7 +38,7 @@ export default function Sidebar() {
   const { documents } = useWiki();
 
   const recentDocuments = [...documents]
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 10);
 
   return (

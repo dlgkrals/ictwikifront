@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type FormEvent, type MouseEvent } from 'react';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
+import type { Inquiry, InquiryFormData, InquiryFilters } from '../types';
 
-function getRelativeTime(dateString) {
+function getRelativeTime(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);
-  const diffInSeconds = Math.floor((now - date) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return `${diffInSeconds}초 전`;
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -19,7 +20,7 @@ function getRelativeTime(dateString) {
   return `${diffInYears}년 전`;
 }
 
-const emptyForm = {
+const emptyForm: InquiryFormData = {
   title: '',
   type: 'PC',
   status: '시작 전',
@@ -34,12 +35,12 @@ const emptyForm = {
 export default function InquiryPage() {
   const { inquiries, addInquiry, updateInquiry } = useWiki();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState(emptyForm);
-  const [expandedId, setExpandedId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({});
+  const [formData, setFormData] = useState<InquiryFormData>(emptyForm);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Partial<Inquiry>>({});
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<InquiryFilters>({
     status: '전체',
     type: '전체',
     worker: '전체',
@@ -61,7 +62,7 @@ export default function InquiryPage() {
     });
   }, [inquiries, filters]);
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key: keyof InquiryFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -76,7 +77,7 @@ export default function InquiryPage() {
 
   const activeFilterCount = Object.values(filters).filter((v) => v !== '전체').length;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.description.trim() || !formData.requester.trim()) {
       alert('작업 이름, 작업 설명, 요청자는 필수 항목입니다.');
@@ -87,11 +88,11 @@ export default function InquiryPage() {
     setShowForm(false);
   };
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: keyof InquiryFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const startEdit = (inquiry) => {
+  const startEdit = (inquiry: Inquiry) => {
     setEditingId(inquiry.id);
     setEditData({ ...inquiry });
     setExpandedId(inquiry.id);
@@ -103,26 +104,33 @@ export default function InquiryPage() {
   };
 
   const saveEdit = () => {
-    updateInquiry(editingId, editData);
-    setEditingId(null);
-    setEditData({});
-  };
-
-  const handleEditChange = (field, value) => {
-    setEditData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const getStatusClass = (status) => {
-    switch (status) {
-      case '시작 전': return 'status-pending';
-      case '진행 중': return 'status-progress';
-      case '완료': return 'status-done';
-      case '보류': return 'status-hold';
-      default: return '';
+    if (editingId !== null) {
+      updateInquiry(editingId, editData);
+      setEditingId(null);
+      setEditData({});
     }
   };
 
-  const handleRowClick = (id) => {
+  const handleEditChange = (field: keyof Inquiry, value: string) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getStatusClass = (status: string): string => {
+    switch (status) {
+      case '시작 전':
+        return 'status-pending';
+      case '진행 중':
+        return 'status-progress';
+      case '완료':
+        return 'status-done';
+      case '보류':
+        return 'status-hold';
+      default:
+        return '';
+    }
+  };
+
+  const handleRowClick = (id: number) => {
     if (editingId && editingId !== id) return;
     setExpandedId(expandedId === id ? null : id);
   };
@@ -142,7 +150,9 @@ export default function InquiryPage() {
             >
               <option value="전체">전체</option>
               {INQUIRY_STATUS.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
@@ -155,7 +165,9 @@ export default function InquiryPage() {
             >
               <option value="전체">전체</option>
               {INQUIRY_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -168,7 +180,9 @@ export default function InquiryPage() {
             >
               <option value="전체">전체</option>
               {workers.map((w) => (
-                <option key={w} value={w}>{w}</option>
+                <option key={w} value={w}>
+                  {w}
+                </option>
               ))}
             </select>
           </div>
@@ -181,7 +195,9 @@ export default function InquiryPage() {
             >
               <option value="전체">전체</option>
               {INQUIRY_METHOD.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
           </div>
@@ -227,7 +243,9 @@ export default function InquiryPage() {
                 className="form-select"
               >
                 {INQUIRY_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
             </div>
@@ -239,7 +257,9 @@ export default function InquiryPage() {
                 className="form-select"
               >
                 {INQUIRY_STATUS.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
             </div>
@@ -271,7 +291,9 @@ export default function InquiryPage() {
               >
                 <option value="">선택</option>
                 {INQUIRY_METHOD.map((method) => (
-                  <option key={method} value={method}>{method}</option>
+                  <option key={method} value={method}>
+                    {method}
+                  </option>
                 ))}
               </select>
             </div>
@@ -296,13 +318,17 @@ export default function InquiryPage() {
               placeholder="해결 방법 (작업 완료 후 작성)"
             />
           </div>
-          <button type="submit" className="btn btn-primary">등록</button>
+          <button type="submit" className="btn btn-primary">
+            등록
+          </button>
         </form>
       )}
 
       <div className="inquiry-stats">
         {activeFilterCount > 0 ? (
-          <>필터 적용: {filteredInquiries.length}건 / 전체 {inquiries.length}건</>
+          <>
+            필터 적용: {filteredInquiries.length}건 / 전체 {inquiries.length}건
+          </>
         ) : (
           <>총 {inquiries.length}건</>
         )}
@@ -365,7 +391,9 @@ export default function InquiryPage() {
                                   className="form-select"
                                 >
                                   {INQUIRY_STATUS.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
+                                    <option key={s} value={s}>
+                                      {s}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
@@ -396,7 +424,9 @@ export default function InquiryPage() {
                                 >
                                   <option value="">선택</option>
                                   {INQUIRY_METHOD.map((m) => (
-                                    <option key={m} value={m}>{m}</option>
+                                    <option key={m} value={m}>
+                                      {m}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
@@ -421,8 +451,12 @@ export default function InquiryPage() {
                               />
                             </div>
                             <div className="edit-actions">
-                              <button className="btn btn-primary" onClick={saveEdit}>저장</button>
-                              <button className="btn btn-secondary" onClick={cancelEdit}>취소</button>
+                              <button className="btn btn-primary" onClick={saveEdit}>
+                                저장
+                              </button>
+                              <button className="btn btn-secondary" onClick={cancelEdit}>
+                                취소
+                              </button>
                             </div>
                           </div>
                         ) : (
@@ -430,7 +464,7 @@ export default function InquiryPage() {
                             <div className="detail-header">
                               <button
                                 className="btn btn-sm btn-secondary"
-                                onClick={(e) => {
+                                onClick={(e: MouseEvent) => {
                                   e.stopPropagation();
                                   startEdit(inquiry);
                                 }}

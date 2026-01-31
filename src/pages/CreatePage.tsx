@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
@@ -8,7 +8,7 @@ export default function CreatePage() {
   const { createDocument } = useWiki();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
@@ -29,7 +29,7 @@ export default function CreatePage() {
             id="title"
             className="form-input"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             placeholder="문서 제목"
           />
         </div>
@@ -39,7 +39,7 @@ export default function CreatePage() {
             id="content"
             className="form-textarea"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
             placeholder="문서 내용을 입력하세요..."
             rows={20}
           />

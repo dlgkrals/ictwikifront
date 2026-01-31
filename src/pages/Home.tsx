@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useWiki, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
+import type { Inquiry } from '../types';
 
-function getRelativeTime(dateString) {
+function getRelativeTime(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);
-  const diffInSeconds = Math.floor((now - date) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return `${diffInSeconds}초 전`;
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -22,23 +23,28 @@ function getRelativeTime(dateString) {
 
 export default function Home() {
   const { notices, inquiries, updateInquiry } = useWiki();
-  const [expandedId, setExpandedId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({});
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Partial<Inquiry>>({});
 
   const recentInquiries = inquiries.slice(0, 10);
 
-  const getStatusClass = (status) => {
+  const getStatusClass = (status: string): string => {
     switch (status) {
-      case '시작 전': return 'status-pending';
-      case '진행 중': return 'status-progress';
-      case '완료': return 'status-done';
-      case '보류': return 'status-hold';
-      default: return '';
+      case '시작 전':
+        return 'status-pending';
+      case '진행 중':
+        return 'status-progress';
+      case '완료':
+        return 'status-done';
+      case '보류':
+        return 'status-hold';
+      default:
+        return '';
     }
   };
 
-  const startEdit = (inquiry) => {
+  const startEdit = (inquiry: Inquiry) => {
     setEditingId(inquiry.id);
     setEditData({ ...inquiry });
     setExpandedId(inquiry.id);
@@ -50,16 +56,18 @@ export default function Home() {
   };
 
   const saveEdit = () => {
-    updateInquiry(editingId, editData);
-    setEditingId(null);
-    setEditData({});
+    if (editingId !== null) {
+      updateInquiry(editingId, editData);
+      setEditingId(null);
+      setEditData({});
+    }
   };
 
-  const handleEditChange = (field, value) => {
+  const handleEditChange = (field: keyof Inquiry, value: string) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleRowClick = (id) => {
+  const handleRowClick = (id: number) => {
     if (editingId && editingId !== id) return;
     setExpandedId(expandedId === id ? null : id);
   };
@@ -69,13 +77,20 @@ export default function Home() {
       <h1 className="page-title">ICT Wiki</h1>
 
       <div className="notice-section">
-        <h2>공지사항</h2>
+        <div className="notice-header">
+          <h2>공지사항</h2>
+          <Link to="/notices" className="btn btn-secondary">
+            더보기
+          </Link>
+        </div>
         <ul className="notice-list">
-          {notices.map((notice) => (
+          {notices.slice(0, 3).map((notice) => (
             <li key={notice.id} className="notice-item">
-              <span className="notice-badge">공지</span>
-              <span className="notice-title">{notice.title}</span>
-              <span className="notice-date">{getRelativeTime(notice.createdAt)}</span>
+              <Link to={`/notices/${notice.id}`} className="notice-link">
+                <span className="notice-badge">공지</span>
+                <span className="notice-title">{notice.title}</span>
+                <span className="notice-date">{getRelativeTime(notice.createdAt)}</span>
+              </Link>
             </li>
           ))}
         </ul>
@@ -139,7 +154,9 @@ export default function Home() {
                                   className="form-select"
                                 >
                                   {INQUIRY_STATUS.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
+                                    <option key={s} value={s}>
+                                      {s}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
@@ -170,7 +187,9 @@ export default function Home() {
                                 >
                                   <option value="">선택</option>
                                   {INQUIRY_METHOD.map((m) => (
-                                    <option key={m} value={m}>{m}</option>
+                                    <option key={m} value={m}>
+                                      {m}
+                                    </option>
                                   ))}
                                 </select>
                               </div>
@@ -195,8 +214,12 @@ export default function Home() {
                               />
                             </div>
                             <div className="edit-actions">
-                              <button className="btn btn-primary" onClick={saveEdit}>저장</button>
-                              <button className="btn btn-secondary" onClick={cancelEdit}>취소</button>
+                              <button className="btn btn-primary" onClick={saveEdit}>
+                                저장
+                              </button>
+                              <button className="btn btn-secondary" onClick={cancelEdit}>
+                                취소
+                              </button>
                             </div>
                           </div>
                         ) : (
@@ -204,7 +227,7 @@ export default function Home() {
                             <div className="detail-header">
                               <button
                                 className="btn btn-sm btn-secondary"
-                                onClick={(e) => {
+                                onClick={(e: MouseEvent) => {
                                   e.stopPropagation();
                                   startEdit(inquiry);
                                 }}
