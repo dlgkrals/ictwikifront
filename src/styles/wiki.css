@@ -269,7 +269,7 @@ body {
 
 /* Pages */
 .page {
-  max-width: 900px;
+  max-width: 100%;
 }
 
 .page-title {
@@ -336,6 +336,18 @@ body {
   background-color: var(--sidebar-bg);
   padding: 2px 6px;
   font-family: monospace;
+}
+
+/* Home Grid Layout */
+.home-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 30px;
+}
+
+.home-left,
+.home-right {
+  min-width: 0;
 }
 
 /* Notice Section */
@@ -663,6 +675,64 @@ body {
 
 .inquiry-row.expanded {
   background-color: #f8f9fa;
+}
+
+/* Documents Section (Home) */
+.documents-section {
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+}
+
+.documents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.documents-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.documents-list {
+  list-style: none;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.document-item {
+  border-bottom: 1px solid #eee;
+}
+
+.document-item:last-child {
+  border-bottom: none;
+}
+
+.document-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.document-link:hover {
+  background-color: var(--sidebar-bg);
+}
+
+.document-title {
+  font-size: 14px;
+  color: var(--link-color);
+}
+
+.document-date {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 /* Search Page */
@@ -1070,4 +1140,46 @@ body {
 .login-footer p {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.login-error {
+  background-color: #ffe6e6;
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.email-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+}
+
+.email-input-wrapper:focus-within {
+  border-color: var(--primary-color);
+}
+
+.email-input-wrapper .login-input {
+  border: none;
+  flex: 1;
+}
+
+.email-input-wrapper .login-input:focus {
+  border: none;
+  outline: none;
+}
+
+.email-suffix {
+  padding: 12px;
+  background-color: var(--sidebar-bg);
+  color: var(--text-muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

@@ -5,17 +5,26 @@ import { useWiki } from '../context/WikiContext';
 export default function CreatePage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
   const { createDocument } = useWiki();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
-    const id = createDocument(title, content);
-    navigate(`/wiki/${id}`);
+    setSaving(true);
+    try {
+      const id = await createDocument(title, content);
+      navigate(`/wiki/${id}`);
+    } catch (error) {
+      console.error('Failed to create document:', error);
+      alert('문서 생성에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -31,6 +40,7 @@ export default function CreatePage() {
             value={title}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             placeholder="문서 제목"
+            disabled={saving}
           />
         </div>
         <div className="form-group">
@@ -42,16 +52,18 @@ export default function CreatePage() {
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
             placeholder="문서 내용을 입력하세요..."
             rows={20}
+            disabled={saving}
           />
         </div>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            생성
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? '생성 중...' : '생성'}
           </button>
           <button
             type="button"
             className="btn btn-secondary"
             onClick={() => navigate('/')}
+            disabled={saving}
           >
             취소
           </button>

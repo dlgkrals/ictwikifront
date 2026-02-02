@@ -1,11 +1,38 @@
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import type { Document } from '../types';
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const { searchDocuments } = useWiki();
-  const results = searchDocuments(query);
+  const [results, setResults] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const doSearch = async () => {
+      if (!query) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const searchResults = await searchDocuments(query);
+      setResults(searchResults);
+      setLoading(false);
+    };
+    doSearch();
+  }, [query, searchDocuments]);
+
+  if (loading) {
+    return (
+      <div className="page search-page">
+        <h1 className="page-title">검색 결과</h1>
+        <p>검색 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page search-page">

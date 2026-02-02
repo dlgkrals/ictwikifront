@@ -1,7 +1,18 @@
-import { useState, type MouseEvent } from 'react';
+import { useState, useEffect, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useWiki, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
-import type { Inquiry } from '../types';
+import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
+import type { Inquiry, InquiryUpdateRequest } from '../types';
+import {
+  INQUIRY_TYPE_MAP,
+  INQUIRY_TYPE_REVERSE_MAP,
+  INQUIRY_STATUS_MAP,
+  INQUIRY_METHOD_MAP,
+  INQUIRY_STATUS_REVERSE_MAP,
+  INQUIRY_METHOD_REVERSE_MAP,
+  type InquiryTypeLabel,
+  type InquiryStatusLabel,
+  type InquiryMethodLabel,
+} from '../types';
 
 function getRelativeTime(dateString: string): string {
   const now = new Date();
@@ -21,16 +32,48 @@ function getRelativeTime(dateString: string): string {
   return `${diffInYears}년 전`;
 }
 
+interface EditData {
+  title: string;
+  type: InquiryTypeLabel;
+  description: string;
+  requester: string;
+  status: InquiryStatusLabel;
+  workerId: number | null;
+  workDate: string;
+  method: InquiryMethodLabel;
+  solution: string;
+}
+
+const emptyEditData: EditData = {
+  title: '',
+  type: 'PC',
+  description: '',
+  requester: '',
+  status: '시작 전',
+  workerId: null,
+  workDate: '',
+  method: '',
+  solution: '',
+};
+
 export default function Home() {
-  const { notices, inquiries, updateInquiry } = useWiki();
+  const { notices, inquiries, documents, updateInquiry, staffUsers, fetchStaffUsers } = useWiki();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<Inquiry>>({});
+  const [editData, setEditData] = useState<EditData>(emptyEditData);
+
+  // 수정 폼이 열릴 때 STAFF 목록 가져오기
+  useEffect(() => {
+    if (editingId !== null) {
+      fetchStaffUsers();
+    }
+  }, [editingId, fetchStaffUsers]);
 
   const recentInquiries = inquiries.slice(0, 10);
 
   const getStatusClass = (status: string): string => {
-    switch (status) {
+    const statusLabel = INQUIRY_STATUS_MAP[status as keyof typeof INQUIRY_STATUS_MAP] || status;
+    switch (statusLabel) {
       case '시작 전':
         return 'status-pending';
       case '진행 중':
@@ -46,24 +89,49 @@ export default function Home() {
 
   const startEdit = (inquiry: Inquiry) => {
     setEditingId(inquiry.id);
-    setEditData({ ...inquiry });
+    setEditData({
+      title: inquiry.title,
+      type: INQUIRY_TYPE_MAP[inquiry.type],
+      description: inquiry.description,
+      requester: inquiry.requester,
+      status: INQUIRY_STATUS_MAP[inquiry.status],
+      workerId: inquiry.workerId,
+      workDate: inquiry.workDate || '',
+      method: inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '',
+      solution: inquiry.solution || '',
+    });
     setExpandedId(inquiry.id);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditData({});
+    setEditData(emptyEditData);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingId !== null) {
-      updateInquiry(editingId, editData);
+      if (!editData.title.trim() || !editData.description.trim() || !editData.requester.trim()) {
+        alert('작업 이름, 작업 설명, 요청자는 필수 항목입니다.');
+        return;
+      }
+      const updates: InquiryUpdateRequest = {
+        title: editData.title,
+        type: INQUIRY_TYPE_REVERSE_MAP[editData.type],
+        description: editData.description,
+        requester: editData.requester,
+        status: INQUIRY_STATUS_REVERSE_MAP[editData.status],
+        workerId: editData.workerId || undefined,
+        method: INQUIRY_METHOD_REVERSE_MAP[editData.method] || undefined,
+        workDate: editData.workDate || undefined,
+        solution: editData.solution || undefined,
+      };
+      await updateInquiry(editingId, updates);
       setEditingId(null);
-      setEditData({});
+      setEditData(emptyEditData);
     }
   };
 
-  const handleEditChange = (field: keyof Inquiry, value: string) => {
+  const handleEditChange = (field: keyof EditData, value: string | number | null) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -76,7 +144,9 @@ export default function Home() {
     <div className="page home-page">
       <h1 className="page-title">ICT Wiki</h1>
 
-      <div className="notice-section">
+      <div className="home-grid">
+        <div className="home-left">
+          <div className="notice-section">
         <div className="notice-header">
           <h2>공지사항</h2>
           <Link to="/notices" className="btn btn-secondary">
@@ -120,6 +190,9 @@ export default function Home() {
             {recentInquiries.map((inquiry) => {
               const isExpanded = expandedId === inquiry.id;
               const isEditing = editingId === inquiry.id;
+              const statusLabel = INQUIRY_STATUS_MAP[inquiry.status];
+              const typeLabel = INQUIRY_TYPE_MAP[inquiry.type];
+              const methodLabel = inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '-';
 
               return (
                 <>
@@ -130,14 +203,14 @@ export default function Home() {
                   >
                     <td>
                       <span className={`status-badge ${getStatusClass(inquiry.status)}`}>
-                        {inquiry.status}
+                        {statusLabel}
                       </span>
                     </td>
-                    <td>{inquiry.type}</td>
+                    <td>{typeLabel}</td>
                     <td className="inquiry-title-cell">{inquiry.title}</td>
                     <td>{inquiry.requester}</td>
-                    <td>{inquiry.worker || '-'}</td>
-                    <td>{inquiry.method || '-'}</td>
+                    <td>{inquiry.workerName || '-'}</td>
+                    <td>{methodLabel}</td>
                     <td>{getRelativeTime(inquiry.createdAt)}</td>
                   </tr>
                   {isExpanded && (
@@ -147,10 +220,46 @@ export default function Home() {
                           <div className="inquiry-edit-form">
                             <div className="edit-grid">
                               <div className="edit-group">
+                                <label>작업 이름 *</label>
+                                <input
+                                  type="text"
+                                  value={editData.title}
+                                  onChange={(e) => handleEditChange('title', e.target.value)}
+                                  className="form-input"
+                                />
+                              </div>
+                              <div className="edit-group">
+                                <label>요청자 *</label>
+                                <input
+                                  type="text"
+                                  value={editData.requester}
+                                  onChange={(e) => handleEditChange('requester', e.target.value)}
+                                  className="form-input"
+                                />
+                              </div>
+                              <div className="edit-group">
+                                <label>유형</label>
+                                <select
+                                  value={editData.type}
+                                  onChange={(e) =>
+                                    handleEditChange('type', e.target.value as InquiryTypeLabel)
+                                  }
+                                  className="form-select"
+                                >
+                                  {INQUIRY_TYPES.map((t) => (
+                                    <option key={t} value={t}>
+                                      {t}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="edit-group">
                                 <label>상태</label>
                                 <select
                                   value={editData.status}
-                                  onChange={(e) => handleEditChange('status', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange('status', e.target.value as InquiryStatusLabel)
+                                  }
                                   className="form-select"
                                 >
                                   {INQUIRY_STATUS.map((s) => (
@@ -162,12 +271,18 @@ export default function Home() {
                               </div>
                               <div className="edit-group">
                                 <label>작업자</label>
-                                <input
-                                  type="text"
-                                  value={editData.worker}
-                                  onChange={(e) => handleEditChange('worker', e.target.value)}
-                                  className="form-input"
-                                />
+                                <select
+                                  value={editData.workerId ?? ''}
+                                  onChange={(e) => handleEditChange('workerId', e.target.value ? Number(e.target.value) : null)}
+                                  className="form-select"
+                                >
+                                  <option value="">선택</option>
+                                  {staffUsers.map((staff) => (
+                                    <option key={staff.id} value={staff.id}>
+                                      {staff.name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div className="edit-group">
                                 <label>작업 날짜</label>
@@ -182,7 +297,9 @@ export default function Home() {
                                 <label>처리 방식</label>
                                 <select
                                   value={editData.method}
-                                  onChange={(e) => handleEditChange('method', e.target.value)}
+                                  onChange={(e) =>
+                                    handleEditChange('method', e.target.value as InquiryMethodLabel)
+                                  }
                                   className="form-select"
                                 >
                                   <option value="">선택</option>
@@ -195,7 +312,7 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="edit-group full">
-                              <label>작업 설명</label>
+                              <label>작업 설명 *</label>
                               <textarea
                                 value={editData.description}
                                 onChange={(e) => handleEditChange('description', e.target.value)}
@@ -267,6 +384,32 @@ export default function Home() {
             <Link to="/inquiries">전체 {inquiries.length}건 보기</Link>
           </div>
         )}
+      </div>
+        </div>
+
+        <div className="home-right">
+          <div className="documents-section">
+            <div className="documents-header">
+              <h2>문서 목록</h2>
+              <Link to="/create" className="btn btn-secondary">
+                새 문서
+              </Link>
+            </div>
+            <ul className="documents-list">
+              {documents.map((doc) => (
+                <li key={doc.id} className="document-item">
+                  <Link to={`/wiki/${doc.id}`} className="document-link">
+                    <span className="document-title">{doc.title}</span>
+                    <span className="document-date">{getRelativeTime(doc.updatedAt)}</span>
+                  </Link>
+                </li>
+              ))}
+              {documents.length === 0 && (
+                <li className="empty-message">등록된 문서가 없습니다.</li>
+              )}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,16 +1,31 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
-import type { TocItem, Section, WikiPart } from '../types';
+import type { Document, TocItem, Section, WikiPart } from '../types';
 
 export default function WikiPage() {
   const { id } = useParams<{ id: string }>();
   const { getDocument, deleteDocument, updateDocument, documents } = useWiki();
   const navigate = useNavigate();
-  const document = getDocument(id || '');
 
+  const [document, setDocument] = useState<Document | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
+
+  useEffect(() => {
+    const fetchDocument = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const doc = await getDocument(parseInt(id, 10));
+      setDocument(doc);
+      setLoading(false);
+    };
+    fetchDocument();
+  }, [id, getDocument]);
 
   const generateSectionId = (title: string, index: number): string => {
     return `section-${index}-${title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9가-힣-]/g, '')}`;
@@ -42,6 +57,14 @@ export default function WikiPage() {
     return toc;
   }, [document]);
 
+  if (loading) {
+    return (
+      <div className="page loading">
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
   if (!document) {
     return (
       <div className="page not-found">
@@ -54,9 +77,9 @@ export default function WikiPage() {
     );
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('정말 이 문서를 삭제하시겠습니까?')) {
-      deleteDocument(id || '');
+      await deleteDocument(document.id);
       navigate('/');
     }
   };
@@ -104,7 +127,7 @@ export default function WikiPage() {
     setEditContent(section.content.join('\n'));
   };
 
-  const handleSaveSection = () => {
+  const handleSaveSection = async () => {
     const sections = parseSections(document.content);
     const newSections = sections.map((section, index) => {
       if (index === editingSection) {
@@ -114,7 +137,10 @@ export default function WikiPage() {
     });
 
     const newContent = newSections.map((s) => s.content.join('\n')).join('\n');
-    updateDocument(id || '', document.title, newContent);
+    await updateDocument(document.id, document.title, newContent);
+    // 문서 새로고침
+    const updated = await getDocument(document.id);
+    if (updated) setDocument(updated);
     setEditingSection(null);
     setEditContent('');
   };

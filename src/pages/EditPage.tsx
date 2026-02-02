@@ -1,22 +1,44 @@
 import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import type { Document } from '../types';
 
 export default function EditPage() {
   const { id } = useParams<{ id: string }>();
   const { getDocument, updateDocument } = useWiki();
   const navigate = useNavigate();
-  const document = getDocument(id || '');
 
+  const [document, setDocument] = useState<Document | null>(null);
+  const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (document) {
-      setTitle(document.title);
-      setContent(document.content);
-    }
-  }, [document]);
+    const fetchDocument = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const doc = await getDocument(parseInt(id, 10));
+      if (doc) {
+        setDocument(doc);
+        setTitle(doc.title);
+        setContent(doc.content);
+      }
+      setLoading(false);
+    };
+    fetchDocument();
+  }, [id, getDocument]);
+
+  if (loading) {
+    return (
+      <div className="page loading">
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
 
   if (!document) {
     return (
@@ -26,14 +48,22 @@ export default function EditPage() {
     );
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
-    updateDocument(id || '', title, content);
-    navigate(`/wiki/${id}`);
+    setSaving(true);
+    try {
+      await updateDocument(document.id, title, content);
+      navigate(`/wiki/${id}`);
+    } catch (error) {
+      console.error('Failed to update document:', error);
+      alert('문서 수정에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -49,6 +79,7 @@ export default function EditPage() {
             value={title}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             placeholder="문서 제목"
+            disabled={saving}
           />
         </div>
         <div className="form-group">
@@ -60,16 +91,18 @@ export default function EditPage() {
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
             placeholder="문서 내용을 입력하세요..."
             rows={20}
+            disabled={saving}
           />
         </div>
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            저장
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? '저장 중...' : '저장'}
           </button>
           <button
             type="button"
             className="btn btn-secondary"
             onClick={() => navigate(`/wiki/${id}`)}
+            disabled={saving}
           >
             취소
           </button>

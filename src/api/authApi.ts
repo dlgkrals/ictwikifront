@@ -1,5 +1,5 @@
 import apiClient, { setCsrfToken } from './client';
-import type { User, LoginResponse } from '../types';
+import type { User, LoginResponse, StaffUser } from '../types';
 
 interface LoginRequest {
   emailPrefix: string;
@@ -63,5 +63,11 @@ export const authApi = {
   // 비밀번호 재설정
   resetPassword: async (token: string, newPassword: string): Promise<void> => {
     await apiClient.post('/api/auth/reset-password', { token, newPassword });
+  },
+
+  // STAFF 목록 조회
+  getStaffUsers: async (): Promise<StaffUser[]> => {
+    const response = await apiClient.get<StaffUser[]>('/api/users/staff');
+    return response.data;
   },
 };

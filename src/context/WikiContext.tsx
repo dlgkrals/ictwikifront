@@ -1,138 +1,33 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { initialDocuments } from '../data/initialDocuments';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { authApi, documentApi, inquiryApi, noticeApi } from '../api';
 import type {
   Document,
   Notice,
   NoticeFormData,
   Inquiry,
-  InquiryFormData,
+  InquiryCreateRequest,
+  InquiryUpdateRequest,
   WikiContextType,
-  InquiryType,
-  InquiryStatus,
-  InquiryMethod,
+  InquiryTypeLabel,
+  InquiryStatusLabel,
+  InquiryMethodLabel,
+  User,
+  StaffUser,
+  DocumentSummary,   // types.ts에 정의 필요
+  NoticeSummary,     // types.ts에 정의 필요
 } from '../types';
 
 const WikiContext = createContext<WikiContextType | null>(null);
 
-const initialNotices: Notice[] = [
-  {
-    id: 1,
-    title: '위키 사이트 오픈 안내',
-    content: `ICT 위키 사이트가 정식 오픈되었습니다.
-
-## 주요 기능
-- **문서 관리**: 기술 문서 작성, 수정, 삭제
-- **민원 처리**: IT 관련 민원 접수 및 처리 현황 확인
-- **검색 기능**: 문서 제목 및 내용 검색
-
-## 이용 안내
-1. 상단 검색창에서 원하는 문서를 검색할 수 있습니다.
-2. 새 문서 버튼을 통해 문서를 작성할 수 있습니다.
-3. 민원은 메인 페이지 또는 민원 페이지에서 등록할 수 있습니다.
-
-문의사항은 ICT팀으로 연락 바랍니다.`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    title: '시스템 점검 안내 (1/30)',
-    content: `## 점검 일시
-2025년 1월 30일 (목) 22:00 ~ 24:00
-
-## 점검 내용
-- 서버 보안 패치 적용
-- 데이터베이스 최적화 작업
-
-## 영향 범위
-점검 시간 동안 위키 사이트 접속이 일시적으로 불가능합니다.
-
-양해 부탁드립니다.`,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 3,
-    title: '민원 처리 지연 안내',
-    content: `현재 민원 요청이 많아 처리가 지연되고 있습니다.
-
-긴급한 건은 내선 **1234**로 연락 바랍니다.
-
-순차적으로 처리하고 있으니 양해 부탁드립니다.`,
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    updatedAt: new Date(Date.now() - 172800000).toISOString(),
-  },
+// UI용 상수 (기존 그대로)
+export const INQUIRY_TYPES: InquiryTypeLabel[] = [
+  'PC', '네트워크', '소프트웨어', '복합기', '프린터',
+  '전자교탁', '빔프로젝터', '주변기기',
 ];
 
-export const INQUIRY_TYPES: InquiryType[] = [
-  'PC',
-  '네트워크',
-  '소프트웨어',
-  '복합기',
-  '프린터',
-  '전자교탁',
-  '빔프로젝터',
-  '주변기기',
-];
+export const INQUIRY_STATUS: InquiryStatusLabel[] = ['시작 전', '진행 중', '완료', '보류'];
 
-export const INQUIRY_STATUS: InquiryStatus[] = ['시작 전', '진행 중', '완료', '보류'];
-
-export const INQUIRY_METHOD: InquiryMethod[] = ['원격', '방문'];
-
-const initialInquiries: Inquiry[] = [
-  {
-    id: 1,
-    title: '문서 작성 관련 문의',
-    type: '소프트웨어',
-    status: '완료',
-    worker: '김기술',
-    workDate: '2025-01-24',
-    method: '원격',
-    description: '문서 작성 버튼이 동작하지 않음',
-    solution: '브라우저 캐시 삭제 후 정상 작동',
-    requester: '간호학과 조교',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 2,
-    title: 'IP 주소 설정 요청',
-    type: '네트워크',
-    status: '완료',
-    worker: '박네트',
-    workDate: '2025-01-23',
-    method: '방문',
-    description: 'IP 주소 없음',
-    solution: 'IP 넣어서 해결',
-    requester: '간호학과 조교',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-  {
-    id: 3,
-    title: '프린터 용지 걸림',
-    type: '프린터',
-    status: '진행 중',
-    worker: '이하드',
-    workDate: '2025-01-25',
-    method: '방문',
-    description: '프린터에서 용지가 계속 걸림',
-    solution: '',
-    requester: '컴퓨터공학과 행정실',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 4,
-    title: '빔프로젝터 화면 안나옴',
-    type: '빔프로젝터',
-    status: '시작 전',
-    worker: '',
-    workDate: '',
-    method: '',
-    description: '강의실 빔프로젝터 전원은 들어오나 화면 출력 안됨',
-    solution: '',
-    requester: '경영학과 교수',
-    createdAt: new Date().toISOString(),
-  },
-];
+export const INQUIRY_METHOD: InquiryMethodLabel[] = ['원격', '방문'];
 
 interface WikiProviderProps {
   children: ReactNode;
@@ -140,132 +35,220 @@ interface WikiProviderProps {
 
 export function WikiProvider({ children }: WikiProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 요약 타입으로 상태 변경
+  const [documents, setDocuments] = useState<DocumentSummary[]>([]);
+  const [notices, setNotices] = useState<NoticeSummary[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [notices, setNotices] = useState<Notice[]>(initialNotices);
-  const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries);
 
-  const login = () => {
-    setIsAuthenticated(true);
+  // 인증 상태 확인
+  const checkAuth = useCallback(async () => {
+    try {
+      const user = await authApi.getCurrentUser();
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      // 인증 성공 시 데이터도 가져오기
+      await Promise.all([fetchDocuments(), fetchNotices(), fetchInquiries()]);
+    } catch {
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  // 로그인
+  const login = async (emailPrefix: string, password: string): Promise<boolean> => {
+    try {
+      const response = await authApi.login(emailPrefix, password);
+      setCurrentUser({
+        userId: 0,
+        name: response.user.name,
+        email: response.user.email,
+        studentId: '',
+        department: '',
+        role: response.user.role,
+      });
+      setIsAuthenticated(true);
+      await Promise.all([fetchDocuments(), fetchNotices(), fetchInquiries()]);
+      return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  // 로그아웃
+  const logout = async (): Promise<void> => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setDocuments([]);
+      setNotices([]);
+      setInquiries([]);
+    }
   };
 
-  const getDocument = (id: string): Document | undefined => {
-    return documents.find((doc) => doc.id === id);
+  // ========== Document ==========
+
+  const fetchDocuments = async (): Promise<void> => {
+    try {
+      const summaries = await documentApi.getAll();
+      setDocuments(summaries);
+    } catch (error) {
+      console.error('Failed to fetch documents:', error);
+      setDocuments([]);
+    }
   };
 
-  const createDocument = (title: string, content: string): string => {
-    const id = title
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9가-힣-]/g, '');
-    const newDoc: Document = {
-      id,
-      title,
-      content,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setDocuments((prev) => [...prev, newDoc]);
-    return id;
+  const getDocument = async (id: number): Promise<Document | null> => {
+    try {
+      return await documentApi.getById(id);
+    } catch {
+      return null;
+    }
   };
 
-  const updateDocument = (id: string, title: string, content: string): void => {
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id
-          ? { ...doc, title, content, updatedAt: new Date().toISOString() }
-          : doc
-      )
-    );
+  const createDocument = async (title: string, content: string): Promise<number> => {
+    const doc = await documentApi.create({ title, content });
+    await fetchDocuments(); // 목록 갱신
+    return doc.id;
   };
 
-  const deleteDocument = (id: string): void => {
-    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+  const updateDocument = async (id: number, title: string, content: string): Promise<void> => {
+    await documentApi.update(id, { title, content });
+    await fetchDocuments();
   };
 
-  const searchDocuments = (query: string): Document[] => {
+  const deleteDocument = async (id: number): Promise<void> => {
+    await documentApi.delete(id);
+    await fetchDocuments();
+  };
+
+  const searchDocuments = async (query: string): Promise<DocumentSummary[]> => {
     if (!query.trim()) return documents;
-    const lowerQuery = query.toLowerCase();
-    return documents.filter(
-      (doc) =>
-        doc.title.toLowerCase().includes(lowerQuery) ||
-        doc.content.toLowerCase().includes(lowerQuery)
-    );
+    try {
+      return await documentApi.search(query); // 요약 반환 가정
+    } catch {
+      return [];
+    }
   };
 
-  const getNotice = (id: number): Notice | undefined => {
-    return notices.find((notice) => notice.id === id);
+  // ========== Notice ==========
+
+  const fetchNotices = async (): Promise<void> => {
+    try {
+      const summaries = await noticeApi.getAll();
+      setNotices(summaries);
+    } catch (error) {
+      console.error('Failed to fetch notices:', error);
+      setNotices([]);
+    }
   };
 
-  const addNotice = (notice: NoticeFormData): void => {
-    const newNotice: Notice = {
-      id: Date.now(),
-      ...notice,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setNotices((prev) => [newNotice, ...prev]);
+  const getNotice = async (id: number): Promise<Notice | null> => {
+    try {
+      return await noticeApi.getById(id);
+    } catch {
+      return null;
+    }
   };
 
-  const updateNotice = (id: number, updates: Partial<Notice>): void => {
-    setNotices((prev) =>
-      prev.map((notice) =>
-        notice.id === id
-          ? { ...notice, ...updates, updatedAt: new Date().toISOString() }
-          : notice
-      )
-    );
+  const addNotice = async (notice: NoticeFormData): Promise<void> => {
+    const created = await noticeApi.create(notice);
+    setNotices((prev) => [created, ...prev]);
   };
 
-  const deleteNotice = (id: number): void => {
-    setNotices((prev) => prev.filter((notice) => notice.id !== id));
+  const updateNotice = async (id: number, updates: NoticeFormData): Promise<void> => {
+    const updated = await noticeApi.update(id, updates);
+    setNotices((prev) => prev.map((n) => (n.id === id ? updated : n)));
   };
 
-  const addInquiry = (inquiry: InquiryFormData): void => {
-    const newInquiry: Inquiry = {
-      id: Date.now(),
-      ...inquiry,
-      createdAt: new Date().toISOString(),
-    };
-    setInquiries((prev) => [newInquiry, ...prev]);
+  const deleteNotice = async (id: number): Promise<void> => {
+    await noticeApi.delete(id);
+    setNotices((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const updateInquiry = (id: number, updates: Partial<Inquiry>): void => {
-    setInquiries((prev) =>
-      prev.map((inq) => (inq.id === id ? { ...inq, ...updates } : inq))
-    );
+  // ========== Inquiry ==========
+
+  const fetchInquiries = async (): Promise<void> => {
+    try {
+      const list = await inquiryApi.getAll();
+      setInquiries(list);
+    } catch (error) {
+      console.error('Failed to fetch inquiries:', error);
+    }
+  };
+
+  const addInquiry = async (inquiry: InquiryCreateRequest): Promise<void> => {
+    const created = await inquiryApi.create(inquiry);
+    setInquiries((prev) => [created, ...prev]);
+  };
+
+  const updateInquiry = async (id: number, updates: InquiryUpdateRequest): Promise<void> => {
+    const updated = await inquiryApi.update(id, updates);
+    setInquiries((prev) => prev.map((inq) => (inq.id === id ? updated : inq)));
+  };
+
+  // ========== Staff Users ==========
+
+  const fetchStaffUsers = async (): Promise<void> => {
+    try {
+      const list = await authApi.getStaffUsers();
+      setStaffUsers(list);
+    } catch (error) {
+      console.error('Failed to fetch staff users:', error);
+      setStaffUsers([]);
+    }
   };
 
   return (
-    <WikiContext.Provider
-      value={{
-        isAuthenticated,
-        login,
-        logout,
-        documents,
-        searchQuery,
-        setSearchQuery,
-        getDocument,
-        createDocument,
-        updateDocument,
-        deleteDocument,
-        searchDocuments,
-        notices,
-        getNotice,
-        addNotice,
-        updateNotice,
-        deleteNotice,
-        inquiries,
-        addInquiry,
-        updateInquiry,
-      }}
-    >
-      {children}
-    </WikiContext.Provider>
+      <WikiContext.Provider
+          value={{
+            isAuthenticated,
+            currentUser,
+            loading,
+            login,
+            logout,
+            checkAuth,
+            documents,
+            searchQuery,
+            setSearchQuery,
+            getDocument,
+            createDocument,
+            updateDocument,
+            deleteDocument,
+            searchDocuments,
+            fetchDocuments,
+            notices,
+            getNotice,
+            addNotice,
+            updateNotice,
+            deleteNotice,
+            fetchNotices,
+            inquiries,
+            addInquiry,
+            updateInquiry,
+            fetchInquiries,
+            staffUsers,
+            fetchStaffUsers,
+          }}
+      >
+        {children}
+      </WikiContext.Provider>
   );
 }
 
