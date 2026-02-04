@@ -1,6 +1,7 @@
-import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import DocumentEditor from '../components/editor/DocumentEditor';
 import type { Document } from '../types';
 
 export default function EditPage() {
@@ -48,7 +49,7 @@ export default function EditPage() {
     );
   }
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
@@ -77,20 +78,16 @@ export default function EditPage() {
             id="title"
             className="form-input"
             value={title}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="문서 제목"
             disabled={saving}
           />
         </div>
         <div className="form-group">
-          <label htmlFor="content">내용</label>
-          <textarea
-            id="content"
-            className="form-textarea"
-            value={content}
-            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-            placeholder="문서 내용을 입력하세요..."
-            rows={20}
+          <label>내용</label>
+          <DocumentEditor
+            content={content}
+            onChange={setContent}
             disabled={saving}
           />
         </div>

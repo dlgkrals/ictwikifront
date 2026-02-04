@@ -792,7 +792,7 @@ body {
 
 /* Form Styles */
 .document-form {
-  max-width: 800px;
+  max-width: 100%;
 }
 
 .form-group {
@@ -1221,4 +1221,367 @@ body {
 .login-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ===== NamuMark Rendering ===== */
+
+.namu-content {
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.namu-content p {
+  margin: 6px 0;
+}
+
+.namu-content h2,
+.namu-content h3,
+.namu-content h4,
+.namu-content h5,
+.namu-content h6 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.namu-content ul,
+.namu-content ol {
+  padding-left: 25px;
+  margin: 8px 0;
+}
+
+.namu-content li {
+  margin-bottom: 4px;
+}
+
+.namu-blockquote {
+  border-left: 3px solid var(--border-color);
+  padding-left: 15px;
+  margin: 10px 0;
+  color: var(--text-muted);
+}
+
+.namu-table {
+  border-collapse: collapse;
+  margin: 15px 0;
+  width: auto;
+}
+
+.namu-table td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+}
+
+.namu-folding {
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+}
+
+.namu-folding-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background-color: var(--sidebar-bg);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.namu-folding-toggle:hover {
+  background-color: #e0e0e0;
+}
+
+.namu-folding-content {
+  padding: 12px;
+}
+
+.namu-footnotes {
+  margin-top: 30px;
+  font-size: 13px;
+}
+
+.namu-footnotes ol {
+  padding-left: 25px;
+}
+
+.namu-footnotes li {
+  margin-bottom: 5px;
+}
+
+.footnote-ref {
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.footnote-ref:hover {
+  text-decoration: underline;
+}
+
+.footnote-back {
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.external-link {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.external-link:hover {
+  text-decoration: underline;
+}
+
+.external-link::after {
+  content: ' \2197';
+  font-size: 10px;
+}
+
+.namu-inline-code {
+  background-color: var(--sidebar-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+/* ===== Document Editor ===== */
+
+.document-editor {
+  border: 1px solid var(--border-color);
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  height: 500px;
+}
+
+.editor-layout > .editor-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editor-layout > .editor-panel:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+.editor-panel-header {
+  padding: 8px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.editor-textarea {
+  border: none !important;
+  border-radius: 0;
+  resize: none;
+  width: 100%;
+  flex: 1;
+  padding: 15px;
+  font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.editor-textarea:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--primary-color);
+}
+
+.editor-preview {
+  padding: 15px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.empty-preview {
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 30px;
+}
+
+/* ===== Syntax Helper ===== */
+
+.syntax-helper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.syntax-helper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 15px;
+  background-color: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.syntax-helper-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.syntax-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--link-color);
+}
+
+.syntax-filter-toggle:hover {
+  text-decoration: underline;
+}
+
+.syntax-filter-arrow {
+  font-size: 9px;
+  transition: transform 0.2s;
+}
+
+.syntax-filter-arrow.open {
+  transform: rotate(90deg);
+}
+
+.syntax-filter-dropdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--content-bg);
+}
+
+.syntax-filter-option {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  background: var(--content-bg);
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 3px;
+  color: var(--text-muted);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.syntax-filter-option:hover {
+  background-color: #e8f0fe;
+  color: var(--text-color);
+}
+
+.syntax-filter-option.active {
+  background-color: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+.syntax-helper-content {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.syntax-helper-tip {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background-color: #f0f7ff;
+  border-left: 3px solid var(--primary-color);
+}
+
+.syntax-category {
+  margin-bottom: 20px;
+}
+
+.syntax-category-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.syntax-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.syntax-item {
+  border: 1px solid #eee;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.syntax-item:hover {
+  background-color: #f0f7ff;
+  border-color: var(--primary-color);
+}
+
+.syntax-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.syntax-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.syntax-description {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.syntax-item-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.syntax-raw {
+  background-color: var(--sidebar-bg);
+  padding: 8px;
+  font-size: 13px;
+  border-radius: 3px;
+}
+
+.syntax-raw code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: 'D2Coding', 'Consolas', 'Monaco', monospace;
+}
+
+.syntax-rendered {
+  padding: 8px;
+  border-left: 2px solid var(--primary-color);
+  font-size: 14px;
+}
+
+/* Wiki sections edit buttons */
+.wiki-sections-edit {
+  display: none;
 }

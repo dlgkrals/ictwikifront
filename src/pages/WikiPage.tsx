@@ -1,17 +1,19 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
-import type { Document, TocItem, Section, WikiPart } from '../types';
+import NamuMarkRenderer, { type ExtractedHeading } from '../components/namumark/NamuMarkRenderer';
+import type { Document, TocItem, Section } from '../types';
 
 export default function WikiPage() {
   const { id } = useParams<{ id: string }>();
-  const { getDocument, deleteDocument, updateDocument, documents } = useWiki();
+  const { getDocument, deleteDocument, updateDocument } = useWiki();
   const navigate = useNavigate();
 
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [tableOfContents, setTableOfContents] = useState<TocItem[]>([]);
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -27,35 +29,13 @@ export default function WikiPage() {
     fetchDocument();
   }, [id, getDocument]);
 
-  const generateSectionId = (title: string, index: number): string => {
-    return `section-${index}-${title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9가-힣-]/g, '')}`;
-  };
-
-  const tableOfContents = useMemo((): TocItem[] => {
-    if (!document) return [];
-    const lines = document.content.split('\n');
-    const toc: TocItem[] = [];
-    let sectionIndex = 0;
-
-    lines.forEach((line) => {
-      const h1Match = line.match(/^# (.+)$/);
-      const h2Match = line.match(/^## (.+)$/);
-      const h3Match = line.match(/^### (.+)$/);
-
-      if (h1Match || h2Match || h3Match) {
-        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match![1];
-        const level = h1Match ? 1 : h2Match ? 2 : 3;
-        toc.push({
-          title,
-          level,
-          id: generateSectionId(title, sectionIndex),
-        });
-        sectionIndex++;
-      }
-    });
-
-    return toc;
-  }, [document]);
+  const handleHeadingsExtracted = useCallback((headings: ExtractedHeading[]) => {
+    setTableOfContents(headings.map((h) => ({
+      title: h.title,
+      level: h.level,
+      id: h.id,
+    })));
+  }, []);
 
   if (loading) {
     return (
@@ -84,6 +64,9 @@ export default function WikiPage() {
     }
   };
 
+  // NamuMark heading regex: == title == (2~6 levels)
+  const HEADING_REGEX = /^(={2,6})\s+(.+?)\s+\1\s*$/;
+
   const parseSections = (content: string): Section[] => {
     const lines = content.split('\n');
     const sections: Section[] = [];
@@ -91,21 +74,20 @@ export default function WikiPage() {
     let sectionIndex = 0;
 
     lines.forEach((line, index) => {
-      const h1Match = line.match(/^# (.+)$/);
-      const h2Match = line.match(/^## (.+)$/);
-      const h3Match = line.match(/^### (.+)$/);
+      const match = line.match(HEADING_REGEX);
 
-      if (h1Match || h2Match || h3Match) {
+      if (match) {
         if (currentSection.title || currentSection.content.length > 0) {
           sections.push({ ...currentSection });
         }
-        const title = h1Match ? h1Match[1] : h2Match ? h2Match[1] : h3Match![1];
+        const level = match[1].length;
+        const title = match[2];
         currentSection = {
           title,
-          level: h1Match ? 1 : h2Match ? 2 : 3,
+          level,
           content: [line],
           startIndex: index,
-          id: generateSectionId(title, sectionIndex),
+          id: `section-${sectionIndex}-${title.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9가-힣-]/g, '')}`,
         };
         sectionIndex++;
       } else {
@@ -138,7 +120,6 @@ export default function WikiPage() {
 
     const newContent = newSections.map((s) => s.content.join('\n')).join('\n');
     await updateDocument(document.id, document.title, newContent);
-    // 문서 새로고침
     const updated = await getDocument(document.id);
     if (updated) setDocument(updated);
     setEditingSection(null);
@@ -148,87 +129,6 @@ export default function WikiPage() {
   const handleCancelEdit = () => {
     setEditingSection(null);
     setEditContent('');
-  };
-
-  const parseWikiLinks = (text: string): WikiPart[] => {
-    const parts: WikiPart[] = [];
-    let lastIndex = 0;
-    const regex = /\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[([^\]]+)\]\]/g;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-      }
-
-      if (match[1] && match[2]) {
-        parts.push({ type: 'link', display: match[1], target: match[2] });
-      } else if (match[3]) {
-        parts.push({ type: 'link', display: match[3], target: match[3] });
-      }
-
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push({ type: 'text', content: text.slice(lastIndex) });
-    }
-
-    return parts;
-  };
-
-  const findDocumentByTitle = (title: string) => {
-    return documents.find((doc) => doc.title.toLowerCase() === title.toLowerCase());
-  };
-
-  const renderTextWithLinks = (text: string): ReactNode[] => {
-    const parts = parseWikiLinks(text);
-    return parts.map((part, i) => {
-      if (part.type === 'link') {
-        const targetDoc = findDocumentByTitle(part.target);
-        if (targetDoc) {
-          return (
-            <Link key={i} to={`/wiki/${targetDoc.id}`} className="wiki-link">
-              {part.display}
-            </Link>
-          );
-        }
-        return (
-          <span key={i} className="wiki-link-broken" title="문서가 존재하지 않습니다">
-            {part.display}
-          </span>
-        );
-      }
-      const formatted = part.content
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/`([^`]+)`/g, '<code>$1</code>');
-      return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} />;
-    });
-  };
-
-  const renderLine = (line: string, index: number): ReactNode => {
-    if (line.startsWith('### ')) {
-      return <h3 key={index}>{renderTextWithLinks(line.slice(4))}</h3>;
-    }
-    if (line.startsWith('## ')) {
-      return <h2 key={index}>{renderTextWithLinks(line.slice(3))}</h2>;
-    }
-    if (line.startsWith('# ')) {
-      return <h1 key={index}>{renderTextWithLinks(line.slice(2))}</h1>;
-    }
-    if (line.startsWith('- ')) {
-      return <li key={index}>{renderTextWithLinks(line.slice(2))}</li>;
-    }
-    if (line.match(/^\d+\. /)) {
-      return <li key={index}>{renderTextWithLinks(line.replace(/^\d+\. /, ''))}</li>;
-    }
-    if (line.startsWith('```')) {
-      return null;
-    }
-    if (line.trim() === '') {
-      return <br key={index} />;
-    }
-    return <p key={index}>{renderTextWithLinks(line)}</p>;
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -243,15 +143,21 @@ export default function WikiPage() {
 
     return sections.map((section, sectionIndex) => {
       const isEditing = editingSection === sectionIndex;
+      // For rendering, skip the heading line (first line) if section has a heading
+      const contentToRender = section.level > 0
+        ? section.content.slice(1).join('\n')
+        : section.content.join('\n');
 
       return (
         <div key={sectionIndex} id={section.id} className="wiki-section">
           <div className="section-header">
             {section.level > 0 && (
               <>
-                {section.level === 1 && <h1>{section.title}</h1>}
                 {section.level === 2 && <h2>{section.title}</h2>}
                 {section.level === 3 && <h3>{section.title}</h3>}
+                {section.level === 4 && <h4>{section.title}</h4>}
+                {section.level === 5 && <h5>{section.title}</h5>}
+                {section.level === 6 && <h6>{section.title}</h6>}
               </>
             )}
             <button
@@ -282,9 +188,7 @@ export default function WikiPage() {
             </div>
           ) : (
             <div className="section-content">
-              {section.content.slice(section.level > 0 ? 1 : 0).map((line, lineIndex) =>
-                renderLine(line, lineIndex)
-              )}
+              <NamuMarkRenderer content={contentToRender} />
             </div>
           )}
         </div>
@@ -331,7 +235,33 @@ export default function WikiPage() {
         </div>
       )}
 
-      <div className="page-content">{renderSections()}</div>
+      <div className="page-content">
+        {editingSection !== null ? (
+          renderSections()
+        ) : (
+          <>
+            <NamuMarkRenderer
+              content={document.content}
+              onHeadingsExtracted={handleHeadingsExtracted}
+            />
+            <div className="wiki-sections-edit">
+              {parseSections(document.content).map((section, sectionIndex) => (
+                <div key={sectionIndex} className="section-edit-trigger">
+                  {section.level > 0 && (
+                    <button
+                      className="btn-edit-section"
+                      onClick={() => handleEditSection(sectionIndex)}
+                      title="이 섹션 편집"
+                    >
+                      [편집]
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

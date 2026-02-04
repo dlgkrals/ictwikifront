@@ -1,6 +1,7 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import DocumentEditor from '../components/editor/DocumentEditor';
 
 export default function CreatePage() {
   const [title, setTitle] = useState('');
@@ -38,20 +39,16 @@ export default function CreatePage() {
             id="title"
             className="form-input"
             value={title}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="문서 제목"
             disabled={saving}
           />
         </div>
         <div className="form-group">
-          <label htmlFor="content">내용</label>
-          <textarea
-            id="content"
-            className="form-textarea"
-            value={content}
-            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-            placeholder="문서 내용을 입력하세요..."
-            rows={20}
+          <label>내용</label>
+          <DocumentEditor
+            content={content}
+            onChange={setContent}
             disabled={saving}
           />
         </div>

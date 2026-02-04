@@ -1,6 +1,7 @@
-import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import { renderLinesSafe } from '../components/InlineFormatter';
 import type { Notice, NoticeFormData } from '../types';
 
 function getRelativeTime(dateString: string): string {
@@ -193,34 +194,6 @@ function NoticeDetailPage({ id }: { id: number }) {
     }
   };
 
-  const renderLine = (line: string, index: number): ReactNode => {
-    if (line.startsWith('### ')) {
-      return <h3 key={index}>{line.slice(4)}</h3>;
-    }
-    if (line.startsWith('## ')) {
-      return <h2 key={index}>{line.slice(3)}</h2>;
-    }
-    if (line.startsWith('# ')) {
-      return <h1 key={index}>{line.slice(2)}</h1>;
-    }
-    if (line.startsWith('- ')) {
-      return <li key={index}>{renderInlineFormat(line.slice(2))}</li>;
-    }
-    if (line.match(/^\d+\. /)) {
-      return <li key={index}>{renderInlineFormat(line.replace(/^\d+\. /, ''))}</li>;
-    }
-    if (line.trim() === '') {
-      return <br key={index} />;
-    }
-    return <p key={index}>{renderInlineFormat(line)}</p>;
-  };
-
-  const renderInlineFormat = (text: string): ReactNode => {
-    const formatted = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>');
-    return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
-  };
 
   return (
     <div className="page notice-detail-page">
@@ -285,7 +258,7 @@ function NoticeDetailPage({ id }: { id: number }) {
             </div>
           </div>
           <div className="notice-content">
-            {notice.content.split('\n').map((line, index) => renderLine(line, index))}
+            {renderLinesSafe(notice.content)}
           </div>
         </>
       )}
