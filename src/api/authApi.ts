@@ -44,8 +44,7 @@ export const authApi = {
     name: string;
     emailPrefix: string;
     password: string;
-    studentId: string;
-    department: string;
+    phoneNumber: string;
   }): Promise<void> => {
     await apiClient.post('/api/auth/signup', data);
   },
@@ -56,8 +55,8 @@ export const authApi = {
   },
 
   // 비밀번호 재설정 요청
-  requestPasswordReset: async (email: string): Promise<void> => {
-    await apiClient.post('/api/auth/request-password-reset', { email });
+  requestPasswordReset: async (emailPrefix: string): Promise<void> => {
+    await apiClient.post(`/api/auth/forgot-password?emailPrefix=${encodeURIComponent(emailPrefix)}`);
   },
 
   // 비밀번호 재설정

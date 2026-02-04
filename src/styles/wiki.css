@@ -60,6 +60,17 @@ body {
   margin: 0 20px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-user {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 .search-wrapper {
   position: relative;
   width: 100%;
@@ -1151,6 +1162,15 @@ body {
   text-align: center;
 }
 
+.login-success {
+  background-color: #e6ffe6;
+  border: 1px solid #28a745;
+  color: #28a745;
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
 .email-input-wrapper {
   display: flex;
   align-items: center;
@@ -1177,6 +1197,25 @@ body {
   color: var(--text-muted);
   font-size: 14px;
   white-space: nowrap;
+}
+
+.login-links {
+  text-align: right;
+  margin-top: -5px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--link-color);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--primary-hover);
 }
 
 .login-btn:disabled {
