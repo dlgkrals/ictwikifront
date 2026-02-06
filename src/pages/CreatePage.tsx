@@ -2,10 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import DocumentEditor from '../components/editor/DocumentEditor';
+import { DOCUMENT_CATEGORIES, type DocumentCategoryCode } from '../types';
 
 export default function CreatePage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [categoryCode, setCategoryCode] = useState<DocumentCategoryCode>('WORK');
   const [saving, setSaving] = useState(false);
   const { createDocument } = useWiki();
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function CreatePage() {
     }
     setSaving(true);
     try {
-      const id = await createDocument(title, content);
+      const id = await createDocument(title, content, categoryCode);
       navigate(`/wiki/${id}`);
     } catch (error) {
       console.error('Failed to create document:', error);
@@ -43,6 +45,22 @@ export default function CreatePage() {
             placeholder="문서 제목"
             disabled={saving}
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="category">카테고리</label>
+          <select
+            id="category"
+            className="form-select"
+            value={categoryCode}
+            onChange={(e) => setCategoryCode(e.target.value as DocumentCategoryCode)}
+            disabled={saving}
+          >
+            {DOCUMENT_CATEGORIES.map((cat) => (
+              <option key={cat.code} value={cat.code}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-group">
           <label>내용</label>

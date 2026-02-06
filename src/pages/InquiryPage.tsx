@@ -16,6 +16,10 @@ import {
   INQUIRY_TYPE_REVERSE_MAP,
   INQUIRY_STATUS_REVERSE_MAP,
   INQUIRY_METHOD_REVERSE_MAP,
+  BUILDINGS,
+  BUILDING_REVERSE_MAP,
+  type BuildingCode,
+  type BuildingLabel,
 } from '../types';
 
 function getRelativeTime(dateString: string): string {
@@ -41,6 +45,8 @@ interface InquiryFormData {
   type: InquiryTypeLabel;
   description: string;
   requester: string;
+  buildingCode: BuildingCode | '';
+  roomNumber: string;
   status: InquiryStatusLabel;
   workerId: number | null;
   workDate: string;
@@ -53,6 +59,8 @@ const emptyForm: InquiryFormData = {
   type: 'PC',
   description: '',
   requester: '',
+  buildingCode: '',
+  roomNumber: '',
   status: '시작 전',
   workerId: null,
   workDate: '',
@@ -129,6 +137,8 @@ export default function InquiryPage() {
       type: INQUIRY_TYPE_REVERSE_MAP[formData.type],
       description: formData.description,
       requester: formData.requester,
+      buildingCode: formData.buildingCode || undefined,
+      roomNumber: formData.roomNumber ? parseInt(formData.roomNumber, 10) : undefined,
       status: INQUIRY_STATUS_REVERSE_MAP[formData.status],
       workerId: formData.workerId || undefined,
       workDate: formData.workDate || undefined,
@@ -151,6 +161,8 @@ export default function InquiryPage() {
       type: INQUIRY_TYPE_MAP[inquiry.type],
       description: inquiry.description,
       requester: inquiry.requester,
+      buildingCode: inquiry.buildingCode || '',
+      roomNumber: inquiry.formattedRoom ? inquiry.formattedRoom.replace(/\s*호$/, '') : '',
       status: INQUIRY_STATUS_MAP[inquiry.status],
       workerId: inquiry.workerId,
       workDate: inquiry.workDate || '',
@@ -176,6 +188,8 @@ export default function InquiryPage() {
         type: INQUIRY_TYPE_REVERSE_MAP[editData.type],
         description: editData.description,
         requester: editData.requester,
+        buildingCode: editData.buildingCode || undefined,
+        roomNumber: editData.roomNumber ? parseInt(editData.roomNumber, 10) : undefined,
         status: INQUIRY_STATUS_REVERSE_MAP[editData.status],
         workerId: editData.workerId || undefined,
         method: INQUIRY_METHOD_REVERSE_MAP[editData.method] || undefined,
@@ -314,6 +328,31 @@ export default function InquiryPage() {
               />
             </div>
             <div className="form-group">
+              <label>건물</label>
+              <select
+                value={formData.buildingCode}
+                onChange={(e) => handleChange('buildingCode', e.target.value)}
+                className="form-select"
+              >
+                <option value="">선택</option>
+                {BUILDINGS.map((b) => (
+                  <option key={b.code} value={b.code}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>호실</label>
+              <input
+                type="text"
+                value={formData.roomNumber}
+                onChange={(e) => handleChange('roomNumber', e.target.value)}
+                className="form-input"
+                placeholder="예: 502"
+              />
+            </div>
+            <div className="form-group">
               <label>유형</label>
               <select
                 value={formData.type}
@@ -425,6 +464,7 @@ export default function InquiryPage() {
             <th>작업 이름</th>
             <th>요청자</th>
             <th>작업자</th>
+            <th>위치</th>
             <th>처리</th>
             <th>등록일</th>
           </tr>
@@ -432,7 +472,7 @@ export default function InquiryPage() {
         <tbody>
           {filteredInquiries.length === 0 ? (
             <tr>
-              <td colSpan={7} className="empty-message">
+              <td colSpan={8} className="empty-message">
                 조건에 맞는 민원이 없습니다.
               </td>
             </tr>
@@ -460,12 +500,17 @@ export default function InquiryPage() {
                     <td className="inquiry-title-cell">{inquiry.title}</td>
                     <td>{inquiry.requester}</td>
                     <td>{inquiry.workerName || '-'}</td>
+                    <td>
+                      {inquiry.buildingName || inquiry.formattedRoom
+                        ? `${inquiry.buildingName || ''}${inquiry.buildingName && inquiry.formattedRoom ? ' ' : ''}${inquiry.formattedRoom || ''}`
+                        : '-'}
+                    </td>
                     <td>{methodLabel}</td>
                     <td>{getRelativeTime(inquiry.createdAt)}</td>
                   </tr>
                   {isExpanded && (
                     <tr key={`${inquiry.id}-detail`} className="inquiry-detail-row">
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         {isEditing ? (
                           <div className="inquiry-edit-form">
                             <div className="edit-grid">
@@ -485,6 +530,31 @@ export default function InquiryPage() {
                                   value={editData.requester}
                                   onChange={(e) => handleEditChange('requester', e.target.value)}
                                   className="form-input"
+                                />
+                              </div>
+                              <div className="edit-group">
+                                <label>건물</label>
+                                <select
+                                  value={editData.buildingCode}
+                                  onChange={(e) => handleEditChange('buildingCode', e.target.value)}
+                                  className="form-select"
+                                >
+                                  <option value="">선택</option>
+                                  {BUILDINGS.map((b) => (
+                                    <option key={b.code} value={b.code}>
+                                      {b.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="edit-group">
+                                <label>호실</label>
+                                <input
+                                  type="text"
+                                  value={editData.roomNumber}
+                                  onChange={(e) => handleEditChange('roomNumber', e.target.value)}
+                                  className="form-input"
+                                  placeholder="예: 502"
                                 />
                               </div>
                               <div className="edit-group">
@@ -603,18 +673,30 @@ export default function InquiryPage() {
                               </button>
                             </div>
                             <div className="detail-content">
+                              {(inquiry.buildingName || inquiry.formattedRoom) && (
+                                <div className="detail-row">
+                                  <span className="detail-label">위치:</span>
+                                  <span>
+                                    {inquiry.buildingName || ''}
+                                    {inquiry.buildingName && inquiry.formattedRoom ? ' ' : ''}
+                                    {inquiry.formattedRoom || ''}
+                                  </span>
+                                </div>
+                              )}
                               <div className="detail-row">
                                 <span className="detail-label">작업 날짜:</span>
                                 <span>{inquiry.workDate || '미정'}</span>
                               </div>
-                              <div className="detail-row">
-                                <span className="detail-label">작업 설명:</span>
-                                <span>{inquiry.description}</span>
-                              </div>
+                              {inquiry.description && (
+                                <div className="detail-row">
+                                  <span className="detail-label">작업 설명:</span>
+                                  <span className="detail-text">{inquiry.description}</span>
+                                </div>
+                              )}
                               {inquiry.solution && (
                                 <div className="detail-row solution">
                                   <span className="detail-label">해결 내용:</span>
-                                  <span>{inquiry.solution}</span>
+                                  <span className="detail-text">{inquiry.solution}</span>
                                 </div>
                               )}
                             </div>

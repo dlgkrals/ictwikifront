@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import NamuMarkRenderer, { type ExtractedHeading } from '../components/namumark/NamuMarkRenderer';
 import type { Document, TocItem, Section } from '../types';
+import { DOCUMENT_CATEGORY_MAP } from '../types';
 
 export default function WikiPage() {
   const { id } = useParams<{ id: string }>();
@@ -119,7 +120,7 @@ export default function WikiPage() {
     });
 
     const newContent = newSections.map((s) => s.content.join('\n')).join('\n');
-    await updateDocument(document.id, document.title, newContent);
+    await updateDocument(document.id, document.title, newContent, document.categoryCode);
     const updated = await getDocument(document.id);
     if (updated) setDocument(updated);
     setEditingSection(null);
@@ -210,6 +211,7 @@ export default function WikiPage() {
         </div>
       </div>
       <div className="page-meta">
+        <span className="meta-category">{DOCUMENT_CATEGORY_MAP[document.categoryCode]}</span>
         <span>생성일: {new Date(document.createdAt).toLocaleDateString('ko-KR')}</span>
         <span>수정일: {new Date(document.updatedAt).toLocaleDateString('ko-KR')}</span>
       </div>

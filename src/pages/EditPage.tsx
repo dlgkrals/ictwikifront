@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import DocumentEditor from '../components/editor/DocumentEditor';
-import type { Document } from '../types';
+import { DOCUMENT_CATEGORIES, type Document, type DocumentCategoryCode } from '../types';
 
 export default function EditPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +13,7 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [categoryCode, setCategoryCode] = useState<DocumentCategoryCode>('WORK');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function EditPage() {
         setDocument(doc);
         setTitle(doc.title);
         setContent(doc.content);
+        setCategoryCode(doc.categoryCode);
       }
       setLoading(false);
     };
@@ -57,7 +59,7 @@ export default function EditPage() {
     }
     setSaving(true);
     try {
-      await updateDocument(document.id, title, content);
+      await updateDocument(document.id, title, content, categoryCode);
       navigate(`/wiki/${id}`);
     } catch (error) {
       console.error('Failed to update document:', error);
@@ -82,6 +84,22 @@ export default function EditPage() {
             placeholder="문서 제목"
             disabled={saving}
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="category">카테고리</label>
+          <select
+            id="category"
+            className="form-select"
+            value={categoryCode}
+            onChange={(e) => setCategoryCode(e.target.value as DocumentCategoryCode)}
+            disabled={saving}
+          >
+            {DOCUMENT_CATEGORIES.map((cat) => (
+              <option key={cat.code} value={cat.code}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-group">
           <label>내용</label>

@@ -135,7 +135,6 @@ export default function SyntaxHelperTab({ onInsert }: SyntaxHelperTabProps) {
 
   const handleFilterSelect = (id: string) => {
     setActiveFilter(id);
-    setFilterOpen(false);
   };
 
   const filterText = activeFilter === 'all' ? '필터' : `필터: ${activeLabel}`;

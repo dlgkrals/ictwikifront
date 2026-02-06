@@ -13,8 +13,9 @@ import type {
   InquiryMethodLabel,
   User,
   StaffUser,
-  DocumentSummary,   // types.ts에 정의 필요
-  NoticeSummary,     // types.ts에 정의 필요
+  DocumentSummary,
+  NoticeSummary,
+  DocumentCategoryCode,
 } from '../types';
 
 const WikiContext = createContext<WikiContextType | null>(null);
@@ -122,14 +123,14 @@ export function WikiProvider({ children }: WikiProviderProps) {
     }
   };
 
-  const createDocument = async (title: string, content: string): Promise<number> => {
-    const doc = await documentApi.create({ title, content });
+  const createDocument = async (title: string, content: string, categoryCode: DocumentCategoryCode): Promise<number> => {
+    const doc = await documentApi.create({ title, content, categoryCode });
     await fetchDocuments(); // 목록 갱신
     return doc.id;
   };
 
-  const updateDocument = async (id: number, title: string, content: string): Promise<void> => {
-    await documentApi.update(id, { title, content });
+  const updateDocument = async (id: number, title: string, content: string, categoryCode: DocumentCategoryCode): Promise<void> => {
+    await documentApi.update(id, { title, content, categoryCode });
     await fetchDocuments();
   };
 
@@ -205,7 +206,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
 
   // ========== Staff Users ==========
 
-  const fetchStaffUsers = async (): Promise<void> => {
+  const fetchStaffUsers = useCallback(async (): Promise<void> => {
     try {
       const list = await authApi.getStaffUsers();
       setStaffUsers(list);
@@ -213,7 +214,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
       console.error('Failed to fetch staff users:', error);
       setStaffUsers([]);
     }
-  };
+  }, []);
 
   return (
       <WikiContext.Provider
