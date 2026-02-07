@@ -66,4 +66,10 @@ export const documentApi = {
     const response = await apiClient.get<Document[]>(`/api/documents/${id}/history`);
     return response.data;
   },
+
+  // 내가 작성한 문서
+  getMyDocuments: async (): Promise<DocumentSummary[]> => {
+    const response = await apiClient.get<DocumentSummary[]>('/api/documents/my');
+    return response.data;
+  },
 };

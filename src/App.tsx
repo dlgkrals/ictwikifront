@@ -12,6 +12,7 @@ import NoticePage from './pages/NoticePage';
 import StatsPage from './pages/StatsPage';
 import LoginPage from './pages/LoginPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import MyPage from './pages/MyPage';
 import './styles/wiki.css';
 
 function AppContent() {
@@ -47,6 +48,8 @@ function AppContent() {
             <Route path="/notices" element={<NoticePage />} />
             <Route path="/notices/:id" element={<NoticePage />} />
             <Route path="/stats" element={<StatsPage />} />
+            <Route path="/my" element={<MyPage />} />
+            <Route path="/my/:tab" element={<MyPage />} />
           </Routes>
         </main>
       </div>

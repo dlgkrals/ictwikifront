@@ -1831,3 +1831,325 @@ body {
   color: var(--text-muted);
   font-size: 12px;
 }
+
+/* ===== Profile Dropdown ===== */
+
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-button:hover .profile-avatar {
+  background-color: var(--primary-hover);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.profile-dropdown-header {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--sidebar-bg);
+}
+
+.profile-dropdown-name {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.profile-dropdown-email {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.profile-dropdown-menu {
+  padding: 8px 0;
+}
+
+.profile-dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.profile-dropdown-menu button:hover {
+  background-color: var(--sidebar-bg);
+}
+
+.profile-dropdown-footer {
+  padding: 8px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.logout-button {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--danger-color);
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #fff5f5;
+}
+
+/* ===== My Page ===== */
+
+.my-page {
+  max-width: 100%;
+}
+
+.my-page-layout {
+  display: flex;
+  gap: 30px;
+  min-height: calc(100vh - 140px);
+}
+
+.my-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px 0;
+  height: fit-content;
+}
+
+.my-sidebar-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.my-sidebar-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 auto 10px;
+}
+
+.my-sidebar-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.my-sidebar-menu {
+  padding: 15px 0;
+}
+
+.my-sidebar-item {
+  display: block;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 14px;
+  border-left: 3px solid transparent;
+}
+
+.my-sidebar-item:hover {
+  background-color: #e0e0e0;
+}
+
+.my-sidebar-item.active {
+  background-color: #e8f0fe;
+  border-left-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.my-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.my-section h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Info Card */
+.info-card {
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  width: 120px;
+  color: var(--text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Password Form */
+.password-form {
+  max-width: 400px;
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 25px;
+}
+
+.password-form .form-group {
+  margin-bottom: 15px;
+}
+
+.password-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+
+.password-form .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.password-form .form-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.password-form .form-input:disabled {
+  background-color: var(--sidebar-bg);
+  cursor: not-allowed;
+}
+
+.password-form .btn {
+  margin-top: 10px;
+}
+
+.form-error {
+  background-color: #ffe6e6;
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+  padding: 12px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.form-success {
+  background-color: #e6ffe6;
+  border: 1px solid #28a745;
+  color: #28a745;
+  padding: 12px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+/* My Table */
+.my-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.my-table th,
+.my-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+}
+
+.my-table th {
+  background-color: var(--sidebar-bg);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.my-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background-color: #f8f9fa;
+}
+
+.clickable-row td:first-child {
+  color: var(--link-color);
+}

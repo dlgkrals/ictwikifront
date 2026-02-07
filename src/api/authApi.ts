@@ -64,6 +64,11 @@ export const authApi = {
     await apiClient.post('/api/auth/reset-password', { token, newPassword });
   },
 
+  // 비밀번호 변경 (로그인 상태)
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await apiClient.put('/api/auth/change-password', { currentPassword, newPassword });
+  },
+
   // STAFF 목록 조회
   getStaffUsers: async (): Promise<StaffUser[]> => {
     const response = await apiClient.get<StaffUser[]>('/api/users/staff');
