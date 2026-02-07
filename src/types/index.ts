@@ -371,6 +371,7 @@ export interface WikiContextType {
   inquiries: Inquiry[];
   addInquiry: (inquiry: InquiryCreateRequest) => Promise<void>;
   updateInquiry: (id: number, updates: InquiryUpdateRequest) => Promise<void>;
+  deleteInquiry: (id: number) => Promise<void>;
   fetchInquiries: () => Promise<void>;
   staffUsers: StaffUser[];
   fetchStaffUsers: () => Promise<void>;

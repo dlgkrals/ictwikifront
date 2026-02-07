@@ -687,6 +687,7 @@ body {
 .detail-header {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
   margin-bottom: 10px;
 }
 

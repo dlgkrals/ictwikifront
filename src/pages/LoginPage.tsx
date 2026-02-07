@@ -289,7 +289,7 @@ export default function LoginPage() {
         )}
 
         <div className="login-footer">
-          <p>서일대학교 ICT 융합대학 위키</p>
+          <p>서일대학교 ICT지원실</p>
         </div>
       </div>
     </div>

@@ -69,7 +69,7 @@ const emptyForm: InquiryFormData = {
 };
 
 export default function InquiryPage() {
-  const { inquiries, addInquiry, updateInquiry, staffUsers, fetchStaffUsers } = useWiki();
+  const { inquiries, addInquiry, updateInquiry, deleteInquiry, staffUsers, fetchStaffUsers } = useWiki();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<InquiryFormData>(emptyForm);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -225,6 +225,13 @@ export default function InquiryPage() {
   const handleRowClick = (id: number) => {
     if (editingId && editingId !== id) return;
     setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('정말로 이 민원을 삭제하시겠습니까?')) {
+      await deleteInquiry(id);
+      setExpandedId(null);
+    }
   };
 
   return (
@@ -670,6 +677,15 @@ export default function InquiryPage() {
                                 }}
                               >
                                 수정
+                              </button>
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={(e: MouseEvent) => {
+                                  e.stopPropagation();
+                                  handleDelete(inquiry.id);
+                                }}
+                              >
+                                삭제
                               </button>
                             </div>
                             <div className="detail-content">

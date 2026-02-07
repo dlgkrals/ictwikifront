@@ -204,6 +204,11 @@ export function WikiProvider({ children }: WikiProviderProps) {
     setInquiries((prev) => prev.map((inq) => (inq.id === id ? updated : inq)));
   };
 
+  const deleteInquiry = async (id: number): Promise<void> => {
+    await inquiryApi.delete(id);
+    setInquiries((prev) => prev.filter((inq) => inq.id !== id));
+  };
+
   // ========== Staff Users ==========
 
   const fetchStaffUsers = useCallback(async (): Promise<void> => {
@@ -243,6 +248,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
             inquiries,
             addInquiry,
             updateInquiry,
+            deleteInquiry,
             fetchInquiries,
             staffUsers,
             fetchStaffUsers,
