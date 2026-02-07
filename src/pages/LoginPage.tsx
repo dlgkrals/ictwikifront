@@ -9,14 +9,14 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>('login');
 
   // 로그인 state
-  const [emailPrefix, setEmailPrefix] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // 회원가입 state
   const [signupData, setSignupData] = useState({
-    emailPrefix: '',
+    email: '',
     password: '',
     name: '',
     phoneNumber: '',
@@ -48,14 +48,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!emailPrefix.trim() || !password.trim()) {
-      setError('아이디와 비밀번호를 입력해주세요.');
+    if (!email.trim() || !password.trim()) {
+      setError('이메일과 비밀번호를 입력해주세요.');
       return;
     }
 
     setIsLoggingIn(true);
     try {
-      const success = await login(emailPrefix, password);
+      const success = await login(email, password);
       if (!success) {
         setError('아이디 또는 비밀번호가 올바르지 않습니다.');
       }
@@ -71,7 +71,7 @@ export default function LoginPage() {
     setSignupError('');
     setSignupSuccess('');
 
-    if (!signupData.emailPrefix.trim() || !signupData.password.trim() || !signupData.name.trim()) {
+    if (!signupData.email.trim() || !signupData.password.trim() || !signupData.name.trim()) {
       setSignupError('이메일, 비밀번호, 이름은 필수 항목입니다.');
       return;
     }
@@ -85,7 +85,7 @@ export default function LoginPage() {
     try {
       await authApi.signup(signupData);
       setSignupSuccess('회원가입이 완료되었습니다. 이메일을 확인하여 인증을 완료해주세요.');
-      setSignupData({ emailPrefix: '', password: '', name: '', phoneNumber: '' });
+      setSignupData({ email: '', password: '', name: '', phoneNumber: '' });
       setTimeout(() => {
         switchMode('login');
       }, 3000);
@@ -103,7 +103,7 @@ export default function LoginPage() {
     setResetSuccess('');
 
     if (!resetEmail.trim()) {
-      setResetError('이메일 앞자리를 입력해주세요.');
+      setResetError('이메일을 입력해주세요.');
       return;
     }
 
@@ -124,7 +124,14 @@ export default function LoginPage() {
     if (field === 'phoneNumber') {
       value = value.replace(/\D/g, '');
     }
+    if (field === 'password') {
+      value = value.replace(/[^\x20-\x7E]/g, '');
+    }
     setSignupData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value.replace(/[^\x20-\x7E]/g, ''));
   };
 
   if (loading) {
@@ -159,19 +166,16 @@ export default function LoginPage() {
             {signupError && <div className="login-error">{signupError}</div>}
             {signupSuccess && <div className="login-success">{signupSuccess}</div>}
             <div className="login-group">
-              <label htmlFor="signupEmail">학교 이메일 *</label>
-              <div className="email-input-wrapper">
-                <input
-                  type="text"
-                  id="signupEmail"
-                  value={signupData.emailPrefix}
-                  onChange={(e) => handleSignupChange('emailPrefix', e.target.value)}
-                  className="login-input email-prefix"
-                  placeholder="이메일 앞자리"
-                  disabled={isSigningUp}
-                />
-                <span className="email-suffix">@g.seoil.ac.kr</span>
-              </div>
+              <label htmlFor="signupEmail">이메일 *</label>
+              <input
+                type="email"
+                id="signupEmail"
+                value={signupData.email}
+                onChange={(e) => handleSignupChange('email', e.target.value)}
+                className="login-input"
+                placeholder="이메일을 입력하세요"
+                disabled={isSigningUp}
+              />
             </div>
             <div className="login-group">
               <label htmlFor="signupPassword">비밀번호 *</label>
@@ -223,19 +227,16 @@ export default function LoginPage() {
             {resetError && <div className="login-error">{resetError}</div>}
             {resetSuccess && <div className="login-success">{resetSuccess}</div>}
             <div className="login-group">
-              <label htmlFor="resetEmail">학교 이메일</label>
-              <div className="email-input-wrapper">
-                <input
-                  type="text"
-                  id="resetEmail"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="login-input email-prefix"
-                  placeholder="이메일 앞자리"
-                  disabled={isResetting}
-                />
-                <span className="email-suffix">@g.seoil.ac.kr</span>
-              </div>
+              <label htmlFor="resetEmail">이메일</label>
+              <input
+                type="email"
+                id="resetEmail"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="login-input"
+                placeholder="이메일을 입력하세요"
+                disabled={isResetting}
+              />
             </div>
             <button type="submit" className="btn btn-primary login-btn" disabled={isResetting}>
               {isResetting ? '발송 중...' : '재설정 메일 발송'}
@@ -250,19 +251,16 @@ export default function LoginPage() {
           <form className="login-form" onSubmit={handleLogin}>
             {error && <div className="login-error">{error}</div>}
             <div className="login-group">
-              <label htmlFor="emailPrefix">학교 이메일</label>
-              <div className="email-input-wrapper">
-                <input
-                  type="text"
-                  id="emailPrefix"
-                  value={emailPrefix}
-                  onChange={(e) => setEmailPrefix(e.target.value)}
-                  className="login-input email-prefix"
-                  placeholder="이메일 앞자리"
-                  disabled={isLoggingIn}
-                />
-                <span className="email-suffix">@g.seoil.ac.kr</span>
-              </div>
+              <label htmlFor="email">이메일</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="login-input"
+                placeholder="이메일을 입력하세요"
+                disabled={isLoggingIn}
+              />
             </div>
             <div className="login-group">
               <label htmlFor="password">비밀번호</label>
@@ -270,7 +268,7 @@ export default function LoginPage() {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => handlePasswordChange(e.target.value)}
                 className="login-input"
                 placeholder="비밀번호를 입력하세요"
                 disabled={isLoggingIn}

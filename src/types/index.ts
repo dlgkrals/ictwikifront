@@ -350,7 +350,7 @@ export interface WikiContextType {
   currentUser: User | null;
   loading: boolean;
   useMockData: boolean;
-  login: (emailPrefix: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   documents: DocumentSummary[];

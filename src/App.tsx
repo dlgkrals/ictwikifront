@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { WikiProvider, useWiki } from './context/WikiContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -9,11 +9,23 @@ import CreatePage from './pages/CreatePage';
 import SearchPage from './pages/SearchPage';
 import InquiryPage from './pages/InquiryPage';
 import NoticePage from './pages/NoticePage';
+import StatsPage from './pages/StatsPage';
 import LoginPage from './pages/LoginPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import './styles/wiki.css';
 
 function AppContent() {
   const { isAuthenticated } = useWiki();
+  const location = useLocation();
+
+  // 비밀번호 재설정 페이지는 인증 없이 접근 가능
+  if (location.pathname === '/reset-password') {
+    return (
+      <Routes>
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      </Routes>
+    );
+  }
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -34,6 +46,7 @@ function AppContent() {
             <Route path="/inquiries" element={<InquiryPage />} />
             <Route path="/notices" element={<NoticePage />} />
             <Route path="/notices/:id" element={<NoticePage />} />
+            <Route path="/stats" element={<StatsPage />} />
           </Routes>
         </main>
       </div>

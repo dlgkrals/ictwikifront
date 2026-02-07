@@ -68,9 +68,9 @@ export function WikiProvider({ children }: WikiProviderProps) {
   }, [checkAuth]);
 
   // 로그인
-  const login = async (emailPrefix: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await authApi.login(emailPrefix, password);
+      const response = await authApi.login(email, password);
       setCurrentUser({
         userId: 0,
         name: response.user.name,

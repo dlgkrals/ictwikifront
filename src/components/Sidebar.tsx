@@ -39,10 +39,20 @@ export default function Sidebar() {
 
   const recentDocuments = [...documents]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 10);
+    .slice(0, 5);
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-section">
+        <h3 className="sidebar-title">통계</h3>
+        <ul className="tool-list">
+          <li>
+            <Link to="/stats" className="tool-link">
+              통계 보기
+            </Link>
+          </li>
+        </ul>
+      </div>
       <div className="sidebar-section">
         <h3 className="sidebar-title">최근 수정</h3>
         <ul className="recent-list">
@@ -54,21 +64,6 @@ export default function Sidebar() {
               </Link>
             </li>
           ))}
-        </ul>
-      </div>
-      <div className="sidebar-section">
-        <h3 className="sidebar-title">도구</h3>
-        <ul className="tool-list">
-          <li>
-            <Link to="/create" className="tool-link">
-              새 문서 만들기
-            </Link>
-          </li>
-          <li>
-            <Link to="/" className="tool-link">
-              메인 페이지
-            </Link>
-          </li>
         </ul>
       </div>
     </aside>

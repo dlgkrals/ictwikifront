@@ -2,7 +2,7 @@ import apiClient, { setCsrfToken } from './client';
 import type { User, LoginResponse, StaffUser } from '../types';
 
 interface LoginRequest {
-  emailPrefix: string;
+  email: string;
   password: string;
 }
 
@@ -13,9 +13,9 @@ interface AuthResponse {
 
 export const authApi = {
   // 로그인
-  login: async (emailPrefix: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/api/auth/login', {
-      emailPrefix,
+      email,
       password,
     } as LoginRequest);
 
@@ -42,7 +42,7 @@ export const authApi = {
   // 회원가입
   signup: async (data: {
     name: string;
-    emailPrefix: string;
+    email: string;
     password: string;
     phoneNumber: string;
   }): Promise<void> => {
@@ -55,8 +55,8 @@ export const authApi = {
   },
 
   // 비밀번호 재설정 요청
-  requestPasswordReset: async (emailPrefix: string): Promise<void> => {
-    await apiClient.post(`/api/auth/forgot-password?emailPrefix=${encodeURIComponent(emailPrefix)}`);
+  requestPasswordReset: async (email: string): Promise<void> => {
+    await apiClient.post(`/api/auth/forgot-password?email=${encodeURIComponent(email)}`);
   },
 
   // 비밀번호 재설정

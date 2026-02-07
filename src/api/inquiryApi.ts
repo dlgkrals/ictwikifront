@@ -15,6 +15,23 @@ interface InquiryStatistics {
   onHold: number;
 }
 
+export interface InquiryStatsItem {
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface InquiryDashboardStats {
+  totalCount: number;
+  statusCounts: Record<string, number>;
+  typeCounts: InquiryStatsItem[];
+  methodCounts: InquiryStatsItem[];
+  buildingCounts: InquiryStatsItem[];
+  avgDailyCount: number;
+  avgMonthlyCount: number;
+  avgProcessingDays: number | null;
+}
+
 export const inquiryApi = {
   // 전체 목록 조회
   getAll: async (): Promise<Inquiry[]> => {
@@ -111,5 +128,43 @@ export const inquiryApi = {
   // 민원 삭제
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/inquiries/${id}`);
+  },
+
+  // 대시보드 통계
+  getDashboardStats: async (): Promise<InquiryDashboardStats> => {
+    const response = await apiClient.get<InquiryDashboardStats>('/api/inquiries/stats/dashboard');
+    return response.data;
+  },
+
+  // 유형별 통계
+  getTypeStats: async (): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-type');
+    return response.data;
+  },
+
+  // 처리방식별 통계
+  getMethodStats: async (): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-method');
+    return response.data;
+  },
+
+  // 건물별 통계
+  getBuildingStats: async (): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-building');
+    return response.data;
+  },
+
+  // 상태별 통계
+  getStatusStats: async (): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-status');
+    return response.data;
+  },
+
+  // 월별 통계 (특정 연도)
+  getMonthlyStats: async (year: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/monthly-in-year', {
+      params: { year },
+    });
+    return response.data;
   },
 };
