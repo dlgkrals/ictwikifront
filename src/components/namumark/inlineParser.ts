@@ -12,7 +12,6 @@ export function parseInline(text: string): InlineNode[] {
     }
   };
 
-  const remaining = () => text.slice(cursor);
   const charAt = (offset = 0) => text[cursor + offset];
 
   while (cursor < text.length) {

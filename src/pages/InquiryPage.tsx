@@ -17,9 +17,7 @@ import {
   INQUIRY_STATUS_REVERSE_MAP,
   INQUIRY_METHOD_REVERSE_MAP,
   BUILDINGS,
-  BUILDING_REVERSE_MAP,
   type BuildingCode,
-  type BuildingLabel,
 } from '../types';
 
 function getRelativeTime(dateString: string): string {

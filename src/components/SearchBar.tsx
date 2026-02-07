@@ -11,11 +11,7 @@ export default function SearchBar() {
 
   const suggestions = query.trim()
     ? documents
-        .filter(
-          (doc) =>
-            doc.title.toLowerCase().includes(query.toLowerCase()) ||
-            doc.content.toLowerCase().includes(query.toLowerCase())
-        )
+        .filter((doc) => doc.title.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 5)
     : [];
 
@@ -83,7 +79,7 @@ export default function SearchBar() {
               >
                 <span className="suggestion-title">{doc.title}</span>
                 <span className="suggestion-preview">
-                  {doc.content.slice(0, 50)}...
+                  {doc.categoryName}
                 </span>
               </Link>
             </li>

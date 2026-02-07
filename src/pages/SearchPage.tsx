@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
-import type { Document } from '../types';
+import type { DocumentSummary } from '../types';
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const { searchDocuments } = useWiki();
-  const [results, setResults] = useState<Document[]>([]);
+  const [results, setResults] = useState<DocumentSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function SearchPage() {
             <li key={doc.id} className="search-result-item">
               <Link to={`/wiki/${doc.id}`}>
                 <h3>{doc.title}</h3>
-                <p className="result-preview">{doc.content.slice(0, 150)}...</p>
+                <p className="result-preview">{doc.categoryName}</p>
               </Link>
             </li>
           ))}

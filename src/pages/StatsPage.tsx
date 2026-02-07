@@ -126,7 +126,7 @@ export default function StatsPage() {
             {Object.entries(dashboardStats.statusCounts).map(([status, count]) => (
               <div key={status} className="status-card">
                 <span className="status-card-label">{status}</span>
-                <span className="status-card-value">{count}건</span>
+                <span className="status-card-value">{count as number}건</span>
               </div>
             ))}
           </div>
