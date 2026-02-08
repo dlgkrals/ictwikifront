@@ -376,6 +376,27 @@ export interface WikiContextType {
   fetchStaffUsers: () => Promise<void>;
 }
 
+// ===== Admin =====
+export interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  phoneNumber: string | null;
+  role: UserRole;
+  active: boolean;
+  approved: boolean;
+  createdAt: string;
+  modifiedAt: string;
+}
+
+export interface AdminUserStats {
+  totalUsers: number;
+  activeUsers: number;
+  pendingUsers: number;
+  staffCount: number;
+  adminCount: number;
+}
+
 // ===== Table of Contents =====
 export interface TocItem {
   title: string;

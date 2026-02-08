@@ -41,6 +41,11 @@ export default function Header() {
         <SearchBar />
       </div>
       <div className="header-right">
+        {currentUser?.role === 'ADMIN' && (
+          <Link to="/admin/dashboard" className="admin-header-btn" title="관리자 페이지">
+            관리자
+          </Link>
+        )}
         <div className="profile-wrapper" ref={dropdownRef}>
           <button
             className="profile-button"

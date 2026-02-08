@@ -13,6 +13,7 @@ import StatsPage from './pages/StatsPage';
 import LoginPage from './pages/LoginPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyPage from './pages/MyPage';
+import AdminPage from './pages/AdminPage';
 import './styles/wiki.css';
 
 function AppContent() {
@@ -50,6 +51,8 @@ function AppContent() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/my" element={<MyPage />} />
             <Route path="/my/:tab" element={<MyPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/:tab" element={<AdminPage />} />
           </Routes>
         </main>
       </div>
