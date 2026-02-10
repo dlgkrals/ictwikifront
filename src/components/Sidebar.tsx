@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
 function getRelativeTime(dateString: string): string {
@@ -34,38 +34,55 @@ function getRelativeTime(dateString: string): string {
   return `${diffInYears}년 전`;
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { documents } = useWiki();
+  const navigate = useNavigate();
 
   const recentDocuments = [...documents]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
+  const handleLinkClick = (path: string) => {
+    onClose();
+    navigate(path);
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-section">
-        <h3 className="sidebar-title">통계</h3>
-        <ul className="tool-list">
-          <li>
-            <Link to="/stats" className="tool-link">
-              통계 보기
-            </Link>
-          </li>
-        </ul>
-      </div>
-      <div className="sidebar-section">
-        <h3 className="sidebar-title">최근 수정</h3>
-        <ul className="recent-list">
-          {recentDocuments.map((doc) => (
-            <li key={doc.id}>
-              <Link to={`/wiki/${doc.id}`} className="recent-link">
-                <span className="recent-title">{doc.title}</span>
-                <span className="recent-time">{getRelativeTime(doc.updatedAt)}</span>
-              </Link>
+    <>
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
+      <aside className={`sidebar ${isOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <div className="sidebar-section">
+          <h3 className="sidebar-title">통계</h3>
+          <ul className="tool-list">
+            <li>
+              <button className="tool-link" onClick={() => handleLinkClick('/stats')}>
+                통계 보기
+              </button>
             </li>
-          ))}
-        </ul>
-      </div>
-    </aside>
+          </ul>
+        </div>
+        <div className="sidebar-section">
+          <h3 className="sidebar-title">최근 수정</h3>
+          <ul className="recent-list">
+            {recentDocuments.map((doc) => (
+              <li key={doc.id}>
+                <button
+                  className="recent-link"
+                  onClick={() => handleLinkClick(`/wiki/${doc.id}`)}
+                >
+                  <span className="recent-title">{doc.title}</span>
+                  <span className="recent-time">{getRelativeTime(doc.updatedAt)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </>
   );
 }

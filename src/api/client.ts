@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.ictwiki.site';
+// const API_BASE_URL = 'https://api.ictwiki.site';
+
+const API_BASE_URL = 'http://localhost:8080';
 
 // Axios instance 생성
 const apiClient = axios.create({
@@ -11,11 +13,16 @@ const apiClient = axios.create({
   },
 });
 
-// CSRF 토큰 저장
-let csrfToken: string | null = null;
+// CSRF 토큰 저장 (sessionStorage로 새로고침 후에도 유지)
+let csrfToken: string | null = sessionStorage.getItem('csrfToken');
 
 export const setCsrfToken = (token: string) => {
-  csrfToken = token;
+  csrfToken = token || null;
+  if (token) {
+    sessionStorage.setItem('csrfToken', token);
+  } else {
+    sessionStorage.removeItem('csrfToken');
+  }
 };
 
 export const getCsrfToken = () => csrfToken;
@@ -36,8 +43,11 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // 인증 실패 - 로그인 페이지로 리다이렉트 처리는 컴포넌트에서
-      console.error('Authentication failed');
+      const url = error.config?.url || '';
+      // 로그인 요청의 401은 세션 만료가 아님
+      if (!url.includes('/api/auth/login')) {
+        window.dispatchEvent(new CustomEvent('session-expired'));
+      }
     }
     return Promise.reject(error);
   }

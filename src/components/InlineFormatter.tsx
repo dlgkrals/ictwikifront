@@ -1,4 +1,5 @@
-import { type ReactNode, Fragment } from 'react';
+import { type ReactNode } from 'react';
+import { LinkItUrl } from 'react-linkify-it';
 
 export function formatInlineText(text: string): ReactNode[] {
   const result: ReactNode[] = [];
@@ -9,10 +10,10 @@ export function formatInlineText(text: string): ReactNode[] {
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      result.push(<Fragment key={key++}>{text.slice(lastIndex, match.index)}</Fragment>);
+      result.push(<LinkItUrl key={key++}>{text.slice(lastIndex, match.index)}</LinkItUrl>);
     }
     if (match[2] !== undefined) {
-      result.push(<strong key={key++}>{match[2]}</strong>);
+      result.push(<strong key={key++}><LinkItUrl>{match[2]}</LinkItUrl></strong>);
     } else if (match[3] !== undefined) {
       result.push(<code key={key++}>{match[3]}</code>);
     }
@@ -20,7 +21,7 @@ export function formatInlineText(text: string): ReactNode[] {
   }
 
   if (lastIndex < text.length) {
-    result.push(<Fragment key={key++}>{text.slice(lastIndex)}</Fragment>);
+    result.push(<LinkItUrl key={key++}>{text.slice(lastIndex)}</LinkItUrl>);
   }
 
   return result;

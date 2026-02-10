@@ -1,5 +1,6 @@
-import { type ReactNode, Fragment } from 'react';
+import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { LinkItUrl } from 'react-linkify-it';
 import type { BlockNode, InlineNode, RenderContext } from './types';
 import FoldingBlock from './FoldingBlock';
 
@@ -98,7 +99,7 @@ export function renderInlineNodes(nodes: InlineNode[], ctx: RenderContext): Reac
 export function renderInline(node: InlineNode, key: number, ctx: RenderContext): ReactNode {
   switch (node.type) {
     case 'text':
-      return <Fragment key={key}>{node.content}</Fragment>;
+      return <LinkItUrl key={key}>{node.content}</LinkItUrl>;
 
     case 'bold':
       return <strong key={key}>{renderInlineNodes(node.children, ctx)}</strong>;

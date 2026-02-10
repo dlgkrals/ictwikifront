@@ -3,7 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { useWiki } from '../context/WikiContext';
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar: () => void;
+}
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const { currentUser, logout } = useWiki();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -33,6 +37,11 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-left">
+        <button className="sidebar-toggle" onClick={onToggleSidebar} title="메뉴">
+          <span className="sidebar-toggle-bar"></span>
+          <span className="sidebar-toggle-bar"></span>
+          <span className="sidebar-toggle-bar"></span>
+        </button>
         <Link to="/" className="logo">
           ICT Wiki
         </Link>

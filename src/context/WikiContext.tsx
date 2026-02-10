@@ -38,6 +38,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   // 요약 타입으로 상태 변경
   const [documents, setDocuments] = useState<DocumentSummary[]>([]);
@@ -67,9 +68,26 @@ export function WikiProvider({ children }: WikiProviderProps) {
     checkAuth();
   }, [checkAuth]);
 
+  // 세션 만료 이벤트 처리
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (isAuthenticated) {
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        setDocuments([]);
+        setNotices([]);
+        setInquiries([]);
+        setSessionExpired(true);
+      }
+    };
+    window.addEventListener('session-expired', handleSessionExpired);
+    return () => window.removeEventListener('session-expired', handleSessionExpired);
+  }, [isAuthenticated]);
+
   // 로그인
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      setSessionExpired(false);
       const response = await authApi.login(email, password);
       setCurrentUser({
         userId: 0,
@@ -83,8 +101,8 @@ export function WikiProvider({ children }: WikiProviderProps) {
       await Promise.all([fetchDocuments(), fetchNotices(), fetchInquiries()]);
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      throw new Error(axiosError.response?.data?.error || '아이디 또는 비밀번호가 올바르지 않습니다.');
     }
   };
 
@@ -227,6 +245,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
             isAuthenticated,
             currentUser,
             loading,
+            sessionExpired,
             login,
             logout,
             checkAuth,

@@ -54,6 +54,11 @@ export const authApi = {
     await apiClient.get(`/api/auth/verify-email?token=${token}`);
   },
 
+  // 인증 메일 재전송
+  resendVerification: async (email: string): Promise<void> => {
+    await apiClient.post(`/api/auth/resend-verification?email=${encodeURIComponent(email)}`);
+  },
+
   // 비밀번호 재설정 요청
   requestPasswordReset: async (email: string): Promise<void> => {
     await apiClient.post(`/api/auth/forgot-password?email=${encodeURIComponent(email)}`);

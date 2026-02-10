@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, type FormEvent, type MouseEvent } from 'react';
+import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
 import type {
   Inquiry,
@@ -127,7 +128,7 @@ export default function InquiryPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.description.trim() || !formData.requester.trim()) {
-      alert('작업 이름, 작업 설명, 요청자는 필수 항목입니다.');
+      alert('작업 이름, 증상, 요청자는 필수 항목입니다.');
       return;
     }
     const request: InquiryCreateRequest = {
@@ -178,7 +179,7 @@ export default function InquiryPage() {
   const saveEdit = async () => {
     if (editingId !== null) {
       if (!editData.title.trim() || !editData.description.trim() || !editData.requester.trim()) {
-        alert('작업 이름, 작업 설명, 요청자는 필수 항목입니다.');
+        alert('작업 이름, 증상, 요청자는 필수 항목입니다.');
         return;
       }
       const updates: InquiryUpdateRequest = {
@@ -426,7 +427,7 @@ export default function InquiryPage() {
             </div>
           </div>
           <div className="form-group">
-            <label>작업 설명 *</label>
+            <label>증상 *</label>
             <textarea
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
@@ -637,7 +638,7 @@ export default function InquiryPage() {
                               </div>
                             </div>
                             <div className="edit-group full">
-                              <label>작업 설명 *</label>
+                              <label>증상 *</label>
                               <textarea
                                 value={editData.description}
                                 onChange={(e) => handleEditChange('description', e.target.value)}
@@ -703,14 +704,14 @@ export default function InquiryPage() {
                               </div>
                               {inquiry.description && (
                                 <div className="detail-row">
-                                  <span className="detail-label">작업 설명:</span>
-                                  <span className="detail-text">{inquiry.description}</span>
+                                  <span className="detail-label">증상:</span>
+                                  <span className="detail-text"><LinkItUrl>{inquiry.description}</LinkItUrl></span>
                                 </div>
                               )}
                               {inquiry.solution && (
                                 <div className="detail-row solution">
                                   <span className="detail-label">해결 내용:</span>
-                                  <span className="detail-text">{inquiry.solution}</span>
+                                  <span className="detail-text"><LinkItUrl>{inquiry.solution}</LinkItUrl></span>
                                 </div>
                               )}
                             </div>

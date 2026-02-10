@@ -1,5 +1,6 @@
 import { useState, useEffect, type MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
 import type { Inquiry, InquiryUpdateRequest } from '../types';
 import {
@@ -9,6 +10,8 @@ import {
   INQUIRY_METHOD_MAP,
   INQUIRY_STATUS_REVERSE_MAP,
   INQUIRY_METHOD_REVERSE_MAP,
+  DOCUMENT_CATEGORIES,
+  type DocumentCategoryCode,
   type InquiryTypeLabel,
   type InquiryStatusLabel,
   type InquiryMethodLabel,
@@ -57,10 +60,11 @@ const emptyEditData: EditData = {
 };
 
 export default function Home() {
-  const { notices, inquiries, documents, updateInquiry, staffUsers, fetchStaffUsers } = useWiki();
+  const { notices, inquiries, documents, updateInquiry, deleteInquiry, staffUsers, fetchStaffUsers } = useWiki();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<EditData>(emptyEditData);
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategoryCode | null>(null);
 
   // 수정 폼이 열릴 때 STAFF 목록 가져오기
   useEffect(() => {
@@ -111,7 +115,7 @@ export default function Home() {
   const saveEdit = async () => {
     if (editingId !== null) {
       if (!editData.title.trim() || !editData.description.trim() || !editData.requester.trim()) {
-        alert('작업 이름, 작업 설명, 요청자는 필수 항목입니다.');
+        alert('작업 이름, 증상, 요청자는 필수 항목입니다.');
         return;
       }
       const updates: InquiryUpdateRequest = {
@@ -312,7 +316,7 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="edit-group full">
-                              <label>작업 설명 *</label>
+                              <label>증상 *</label>
                               <textarea
                                 value={editData.description}
                                 onChange={(e) => handleEditChange('description', e.target.value)}
@@ -351,6 +355,17 @@ export default function Home() {
                               >
                                 수정
                               </button>
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={(e: MouseEvent) => {
+                                  e.stopPropagation();
+                                  if (window.confirm('정말로 이 민원을 삭제하시겠습니까?')) {
+                                    deleteInquiry(inquiry.id);
+                                  }
+                                }}
+                              >
+                                삭제
+                              </button>
                             </div>
                             <div className="detail-content">
                               <div className="detail-row">
@@ -358,13 +373,13 @@ export default function Home() {
                                 <span>{inquiry.workDate || '미정'}</span>
                               </div>
                               <div className="detail-row">
-                                <span className="detail-label">작업 설명:</span>
-                                <span>{inquiry.description}</span>
+                                <span className="detail-label">증상:</span>
+                                <span><LinkItUrl>{inquiry.description}</LinkItUrl></span>
                               </div>
                               {inquiry.solution && (
                                 <div className="detail-row solution">
                                   <span className="detail-label">해결 내용:</span>
-                                  <span>{inquiry.solution}</span>
+                                  <span><LinkItUrl>{inquiry.solution}</LinkItUrl></span>
                                 </div>
                               )}
                             </div>
@@ -395,19 +410,50 @@ export default function Home() {
                 새 문서
               </Link>
             </div>
-            <ul className="documents-list">
-              {documents.map((doc) => (
-                <li key={doc.id} className="document-item">
-                  <Link to={`/wiki/${doc.id}`} className="document-link">
-                    <span className="document-title">{doc.title}</span>
-                    <span className="document-date">{getRelativeTime(doc.updatedAt)}</span>
-                  </Link>
-                </li>
+            <div className="document-category-filters">
+              <button
+                className={`category-filter-btn ${selectedCategory === null ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(null)}
+              >
+                전체
+              </button>
+              {DOCUMENT_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.code}
+                  className={`category-filter-btn ${selectedCategory === cat.code ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat.code)}
+                >
+                  {cat.label}
+                </button>
               ))}
+            </div>
+            <div className="documents-list">
+              {(selectedCategory
+                ? DOCUMENT_CATEGORIES.filter(cat => cat.code === selectedCategory)
+                : DOCUMENT_CATEGORIES
+              ).map((cat) => {
+                const categoryDocs = documents.filter(doc => doc.categoryCode === cat.code);
+                if (categoryDocs.length === 0) return null;
+                return (
+                  <div key={cat.code} className="document-category-group">
+                    <h3 className="document-category-title">{cat.label}</h3>
+                    <ul className="document-category-items">
+                      {categoryDocs.map((doc) => (
+                        <li key={doc.id} className="document-item">
+                          <Link to={`/wiki/${doc.id}`} className="document-link">
+                            <span className="document-title">{doc.title}</span>
+                            <span className="document-date">{getRelativeTime(doc.updatedAt)}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
               {documents.length === 0 && (
-                <li className="empty-message">등록된 문서가 없습니다.</li>
+                <p className="empty-message">등록된 문서가 없습니다.</p>
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
