@@ -5,8 +5,7 @@ export interface User {
   userId: number;
   name: string;
   email: string;
-  studentId: string;
-  department: string;
+  phoneNumber: string | null;
   role: UserRole;
 }
 

@@ -65,7 +65,16 @@ export function WikiProvider({ children }: WikiProviderProps) {
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    const init = async () => {
+      // 앱 시작 시 CSRF 토큰 먼저 취득한 뒤 인증 상태 확인
+      try {
+        await authApi.fetchCsrfToken();
+      } catch {
+        // CSRF 토큰 취득 실패 시에도 인증 확인은 계속 진행
+      }
+      await checkAuth();
+    };
+    init();
   }, [checkAuth]);
 
   // 세션 만료 이벤트 처리
@@ -93,8 +102,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
         userId: 0,
         name: response.user.name,
         email: response.user.email,
-        studentId: '',
-        department: '',
+        phoneNumber: null,
         role: response.user.role,
       });
       setIsAuthenticated(true);

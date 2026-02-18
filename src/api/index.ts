@@ -1,4 +1,4 @@
-export { default as apiClient, setCsrfToken, getCsrfToken } from './client';
+export { default as apiClient } from './client';
 export { authApi } from './authApi';
 export { documentApi } from './documentApi';
 export { inquiryApi } from './inquiryApi';

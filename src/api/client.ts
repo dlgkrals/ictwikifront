@@ -4,34 +4,26 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080';
 
-// Axios instance 생성
+// 메모리 내 CSRF 토큰 관리 (크로스 오리진에서 쿠키 접근 불가 → 응답 바디로 수신)
+let csrfToken: string | null = null;
+
+export const setCsrfToken = (token: string | null) => {
+  csrfToken = token;
+};
+
+// Request interceptor - 변경 요청에 X-XSRF-TOKEN 헤더 추가
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // 세션 쿠키 포함
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// CSRF 토큰 저장 (sessionStorage로 새로고침 후에도 유지)
-let csrfToken: string | null = sessionStorage.getItem('csrfToken');
-
-export const setCsrfToken = (token: string) => {
-  csrfToken = token || null;
-  if (token) {
-    sessionStorage.setItem('csrfToken', token);
-  } else {
-    sessionStorage.removeItem('csrfToken');
-  }
-};
-
-export const getCsrfToken = () => csrfToken;
-
-// Request interceptor - CSRF 토큰 추가
 apiClient.interceptors.request.use(
   (config) => {
     if (csrfToken && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
-      config.headers['X-CSRF-TOKEN'] = csrfToken;
+      config.headers['X-XSRF-TOKEN'] = csrfToken;
     }
     return config;
   },
@@ -44,7 +36,6 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const url = error.config?.url || '';
-      // 로그인 요청의 401은 세션 만료가 아님
       if (!url.includes('/api/auth/login')) {
         window.dispatchEvent(new CustomEvent('session-expired'));
       }

@@ -11,15 +11,27 @@ interface AuthResponse {
   csrfToken: string;
 }
 
+interface CsrfResponse {
+  csrfToken: string;
+}
+
 export const authApi = {
-  // 로그인
+  // 앱 시작 시 CSRF 토큰 선행 취득 (/api/auth/csrf-token은 인증 없이 접근 가능)
+  fetchCsrfToken: async (): Promise<void> => {
+    const response = await apiClient.get<CsrfResponse>('/api/auth/csrf-token');
+    if (response.data.csrfToken) {
+      setCsrfToken(response.data.csrfToken);
+    }
+  },
+
+  // 로그인 - 성공 시 서버가 새 CSRF 토큰 반환
   login: async (email: string, password: string): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/api/auth/login', {
       email,
       password,
     } as LoginRequest);
 
-    // CSRF 토큰 저장
+    // 로그인 후 갱신된 CSRF 토큰 저장
     if (response.data.csrfToken) {
       setCsrfToken(response.data.csrfToken);
     }
@@ -30,7 +42,7 @@ export const authApi = {
   // 로그아웃
   logout: async (): Promise<void> => {
     await apiClient.post('/api/auth/logout');
-    setCsrfToken('');
+    setCsrfToken(null);
   },
 
   // 현재 사용자 정보 조회

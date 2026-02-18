@@ -21,6 +21,16 @@ function formatDateTime(dateString: string): string {
   });
 }
 
+function calcStats(users: AdminUser[]): AdminUserStats {
+  return {
+    totalUsers: users.length,
+    activeUsers: users.filter((u) => u.active).length,
+    pendingUsers: users.filter((u) => !u.approved).length,
+    staffCount: users.filter((u) => u.role === 'STAFF').length,
+    adminCount: users.filter((u) => u.role === 'ADMIN').length,
+  };
+}
+
 export default function AdminPage() {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
@@ -28,20 +38,10 @@ export default function AdminPage() {
 
   const activeTab: AdminTab = (tab as AdminTab) || 'dashboard';
 
-  const [stats, setStats] = useState<AdminUserStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [pendingUsers, setPendingUsers] = useState<AdminUser[]>([]);
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // 비밀번호 변경 모달
-  const [passwordModal, setPasswordModal] = useState<{ userId: number; name: string } | null>(null);
-  const [newPassword, setNewPassword] = useState('');
-
-  // 권한 변경 모달
-  const [roleModal, setRoleModal] = useState<{ userId: number; name: string; currentRole: UserRole } | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>('STUDENT');
 
   if (currentUser?.role !== 'ADMIN') {
     return (
@@ -54,46 +54,16 @@ export default function AdminPage() {
 
   useEffect(() => {
     setMessage(null);
-    if (activeTab === 'dashboard') {
-      fetchStats();
-    } else if (activeTab === 'users') {
-      fetchUsers();
-    } else if (activeTab === 'pending') {
-      fetchPendingUsers();
-    }
+    fetchAllUsers();
   }, [activeTab]);
 
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      const data = await adminApi.getStats();
-      setStats(data);
-    } catch {
-      setMessage({ type: 'error', text: '통계를 불러오는데 실패했습니다.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
+  const fetchAllUsers = async () => {
     setLoading(true);
     try {
       const data = await adminApi.getAllUsers();
-      setUsers(data);
+      setAllUsers(data);
     } catch {
       setMessage({ type: 'error', text: '회원 목록을 불러오는데 실패했습니다.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPendingUsers = async () => {
-    setLoading(true);
-    try {
-      const data = await adminApi.getPendingUsers();
-      setPendingUsers(data);
-    } catch {
-      setMessage({ type: 'error', text: '승인 대기 목록을 불러오는데 실패했습니다.' });
     } finally {
       setLoading(false);
     }
@@ -104,25 +74,9 @@ export default function AdminPage() {
     try {
       await adminApi.approveUser(userId);
       setMessage({ type: 'success', text: '회원이 승인되었습니다.' });
-      if (activeTab === 'pending') await fetchPendingUsers();
-      else await fetchUsers();
+      await fetchAllUsers();
     } catch {
       setMessage({ type: 'error', text: '승인에 실패했습니다.' });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleReject = async (userId: number) => {
-    if (!confirm('정말 승인을 거부하시겠습니까?')) return;
-    setActionLoading(userId);
-    try {
-      await adminApi.rejectUser(userId);
-      setMessage({ type: 'success', text: '승인이 거부되었습니다.' });
-      if (activeTab === 'pending') await fetchPendingUsers();
-      else await fetchUsers();
-    } catch {
-      setMessage({ type: 'error', text: '승인 거부에 실패했습니다.' });
     } finally {
       setActionLoading(null);
     }
@@ -133,7 +87,7 @@ export default function AdminPage() {
     try {
       await adminApi.activateUser(userId);
       setMessage({ type: 'success', text: '계정이 활성화되었습니다.' });
-      await fetchUsers();
+      await fetchAllUsers();
     } catch {
       setMessage({ type: 'error', text: '활성화에 실패했습니다.' });
     } finally {
@@ -147,7 +101,7 @@ export default function AdminPage() {
     try {
       await adminApi.deactivateUser(userId);
       setMessage({ type: 'success', text: '계정이 비활성화되었습니다.' });
-      await fetchUsers();
+      await fetchAllUsers();
     } catch {
       setMessage({ type: 'error', text: '비활성화에 실패했습니다.' });
     } finally {
@@ -161,7 +115,7 @@ export default function AdminPage() {
     try {
       await adminApi.deleteUser(userId);
       setMessage({ type: 'success', text: '회원이 삭제되었습니다.' });
-      await fetchUsers();
+      await fetchAllUsers();
     } catch {
       setMessage({ type: 'error', text: '삭제에 실패했습니다.' });
     } finally {
@@ -169,33 +123,8 @@ export default function AdminPage() {
     }
   };
 
-  const handlePasswordChange = async () => {
-    if (!passwordModal || !newPassword) return;
-    if (newPassword.length < 8) {
-      setMessage({ type: 'error', text: '비밀번호는 8자 이상이어야 합니다.' });
-      return;
-    }
-    try {
-      await adminApi.changePassword(passwordModal.userId, newPassword);
-      setMessage({ type: 'success', text: '비밀번호가 변경되었습니다.' });
-      setPasswordModal(null);
-      setNewPassword('');
-    } catch {
-      setMessage({ type: 'error', text: '비밀번호 변경에 실패했습니다.' });
-    }
-  };
-
-  const handleRoleChange = async () => {
-    if (!roleModal) return;
-    try {
-      await adminApi.changeRole(roleModal.userId, selectedRole);
-      setMessage({ type: 'success', text: '권한이 변경되었습니다.' });
-      setRoleModal(null);
-      await fetchUsers();
-    } catch {
-      setMessage({ type: 'error', text: '권한 변경에 실패했습니다.' });
-    }
-  };
+  const stats = calcStats(allUsers);
+  const pendingUsers = allUsers.filter((u) => !u.approved);
 
   const menuItems = [
     { key: 'dashboard', label: '대시보드', path: '/admin/dashboard' },
@@ -205,7 +134,6 @@ export default function AdminPage() {
 
   const renderDashboard = () => {
     if (loading) return <p>로딩 중...</p>;
-    if (!stats) return null;
 
     return (
       <div className="my-section">
@@ -285,22 +213,13 @@ export default function AdminPage() {
               <td>
                 <div className="admin-actions">
                   {isPending ? (
-                    <>
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleApprove(user.id)}
-                        disabled={actionLoading === user.id}
-                      >
-                        승인
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleReject(user.id)}
-                        disabled={actionLoading === user.id}
-                      >
-                        거부
-                      </button>
-                    </>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => handleApprove(user.id)}
+                      disabled={actionLoading === user.id}
+                    >
+                      승인
+                    </button>
                   ) : (
                     <>
                       {!user.approved && (
@@ -330,24 +249,6 @@ export default function AdminPage() {
                         </button>
                       ) : null}
                       <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => {
-                          setRoleModal({ userId: user.id, name: user.name, currentRole: user.role });
-                          setSelectedRole(user.role);
-                        }}
-                      >
-                        권한
-                      </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => {
-                          setPasswordModal({ userId: user.id, name: user.name });
-                          setNewPassword('');
-                        }}
-                      >
-                        비밀번호
-                      </button>
-                      <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(user.id)}
                         disabled={actionLoading === user.id}
@@ -373,7 +274,7 @@ export default function AdminPage() {
         return (
           <div className="my-section">
             <h2>전체 회원 관리</h2>
-            {renderUserTable(users, false)}
+            {renderUserTable(allUsers, false)}
           </div>
         );
       case 'pending':
@@ -404,7 +305,7 @@ export default function AdminPage() {
                 className={`my-sidebar-item ${activeTab === item.key ? 'active' : ''}`}
               >
                 {item.label}
-                {item.key === 'pending' && stats && stats.pendingUsers > 0 && (
+                {item.key === 'pending' && stats.pendingUsers > 0 && (
                   <span className="admin-badge-count">{stats.pendingUsers}</span>
                 )}
               </Link>
@@ -420,58 +321,6 @@ export default function AdminPage() {
           {renderContent()}
         </main>
       </div>
-
-      {/* 비밀번호 변경 모달 */}
-      {passwordModal && (
-        <div className="admin-modal-overlay" onClick={() => setPasswordModal(null)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>비밀번호 변경</h3>
-            <p className="admin-modal-desc">{passwordModal.name}님의 비밀번호를 변경합니다.</p>
-            <div className="form-group">
-              <label>새 비밀번호</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value.replace(/[^\x20-\x7E]/g, ''))}
-                className="form-input"
-                placeholder="대소문자, 숫자, 특수문자 포함 8자 이상"
-              />
-            </div>
-            <div className="admin-modal-actions">
-              <button className="btn btn-primary" onClick={handlePasswordChange}>변경</button>
-              <button className="btn btn-secondary" onClick={() => setPasswordModal(null)}>취소</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 권한 변경 모달 */}
-      {roleModal && (
-        <div className="admin-modal-overlay" onClick={() => setRoleModal(null)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>권한 변경</h3>
-            <p className="admin-modal-desc">
-              {roleModal.name}님의 권한을 변경합니다. (현재: {ROLE_LABEL[roleModal.currentRole]})
-            </p>
-            <div className="form-group">
-              <label>역할</label>
-              <select
-                className="form-select"
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-              >
-                <option value="STUDENT">학생</option>
-                <option value="STAFF">직원</option>
-                <option value="ADMIN">관리자</option>
-              </select>
-            </div>
-            <div className="admin-modal-actions">
-              <button className="btn btn-primary" onClick={handleRoleChange}>변경</button>
-              <button className="btn btn-secondary" onClick={() => setRoleModal(null)}>취소</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
