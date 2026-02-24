@@ -4,6 +4,7 @@ import type { User, LoginResponse, StaffUser } from '../types';
 interface LoginRequest {
   email: string;
   password: string;
+  rememberMe: boolean;
 }
 
 interface AuthResponse {
@@ -25,10 +26,11 @@ export const authApi = {
   },
 
   // 로그인 - 성공 시 서버가 새 CSRF 토큰 반환
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string, rememberMe: boolean = false): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/api/auth/login', {
       email,
       password,
+      rememberMe,
     } as LoginRequest);
 
     // 로그인 후 갱신된 CSRF 토큰 저장
@@ -43,6 +45,15 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await apiClient.post('/api/auth/logout');
     setCsrfToken(null);
+    // 로그아웃 후 다음 로그인을 위해 새 CSRF 토큰 취득
+    try {
+      const response = await apiClient.get<CsrfResponse>('/api/auth/csrf-token');
+      if (response.data.csrfToken) {
+        setCsrfToken(response.data.csrfToken);
+      }
+    } catch {
+      // CSRF 토큰 갱신 실패 시 무시 (다음 로그인 시 재시도)
+    }
   },
 
   // 현재 사용자 정보 조회

@@ -28,6 +28,7 @@ export default function LoginPage() {
   // 로그인 state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -146,7 +147,7 @@ export default function LoginPage() {
 
     setIsLoggingIn(true);
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');
     } finally {
@@ -468,6 +469,15 @@ export default function LoginPage() {
               />
             </div>
             <div className="login-links">
+              <label className="remember-me-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoggingIn}
+                />
+                로그인 상태 유지
+              </label>
               <button type="button" className="link-button" onClick={() => switchMode('forgotPassword')}>
                 비밀번호를 잊으셨나요?
               </button>

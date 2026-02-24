@@ -43,6 +43,11 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const [passwordModal, setPasswordModal] = useState<{ userId: number; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [roleModal, setRoleModal] = useState<{ userId: number; name: string; currentRole: UserRole } | null>(null);
+  const [newRole, setNewRole] = useState<UserRole>('STUDENT');
+
   if (currentUser?.role !== 'ADMIN') {
     return (
       <div className="page">
@@ -118,6 +123,36 @@ export default function AdminPage() {
       await fetchAllUsers();
     } catch {
       setMessage({ type: 'error', text: '삭제에 실패했습니다.' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordModal) return;
+    setActionLoading(passwordModal.userId);
+    try {
+      await adminApi.changePassword(passwordModal.userId, newPassword);
+      setMessage({ type: 'success', text: '비밀번호가 변경되었습니다.' });
+      setPasswordModal(null);
+      setNewPassword('');
+    } catch {
+      setMessage({ type: 'error', text: '비밀번호 변경에 실패했습니다.' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleChangeRole = async () => {
+    if (!roleModal) return;
+    setActionLoading(roleModal.userId);
+    try {
+      await adminApi.changeRole(roleModal.userId, newRole);
+      setMessage({ type: 'success', text: '역할이 변경되었습니다.' });
+      setRoleModal(null);
+      await fetchAllUsers();
+    } catch {
+      setMessage({ type: 'error', text: '역할 변경에 실패했습니다.' });
     } finally {
       setActionLoading(null);
     }
@@ -249,6 +284,26 @@ export default function AdminPage() {
                         </button>
                       ) : null}
                       <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => {
+                          setPasswordModal({ userId: user.id, name: user.name });
+                          setNewPassword('');
+                        }}
+                        disabled={actionLoading === user.id}
+                      >
+                        비밀번호 변경
+                      </button>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => {
+                          setRoleModal({ userId: user.id, name: user.name, currentRole: user.role });
+                          setNewRole(user.role);
+                        }}
+                        disabled={actionLoading === user.id}
+                      >
+                        역할 변경
+                      </button>
+                      <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(user.id)}
                         disabled={actionLoading === user.id}
@@ -291,6 +346,73 @@ export default function AdminPage() {
 
   return (
     <div className="page my-page">
+      {/* 비밀번호 변경 모달 */}
+      {passwordModal && (
+        <div className="admin-modal-overlay" onClick={() => setPasswordModal(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>비밀번호 변경</h3>
+            <p className="admin-modal-desc">{passwordModal.name} 회원의 비밀번호를 변경합니다.</p>
+            <div className="form-group">
+              <label className="form-label">새 비밀번호</label>
+              <input
+                type="password"
+                className="form-input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="새 비밀번호 입력"
+                autoFocus
+              />
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleChangePassword}
+                disabled={!newPassword || actionLoading === passwordModal.userId}
+              >
+                변경
+              </button>
+              <button className="btn btn-secondary" onClick={() => setPasswordModal(null)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 역할 변경 모달 */}
+      {roleModal && (
+        <div className="admin-modal-overlay" onClick={() => setRoleModal(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>역할 변경</h3>
+            <p className="admin-modal-desc">{roleModal.name} 회원의 역할을 변경합니다.</p>
+            <div className="form-group">
+              <label className="form-label">역할</label>
+              <select
+                className="form-select"
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as UserRole)}
+              >
+                <option value="STUDENT">학생</option>
+                <option value="STAFF">직원</option>
+                <option value="ADMIN">관리자</option>
+              </select>
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleChangeRole}
+                disabled={actionLoading === roleModal.userId}
+              >
+                변경
+              </button>
+              <button className="btn btn-secondary" onClick={() => setRoleModal(null)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="my-page-layout">
         <aside className="my-sidebar">
           <div className="my-sidebar-header">

@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { AdminUser } from '../types';
+import type { AdminUser, UserRole } from '../types';
 
 export const adminApi = {
   // 전체 회원 목록
@@ -26,5 +26,15 @@ export const adminApi = {
   // 회원 삭제
   deleteUser: async (userId: number): Promise<void> => {
     await apiClient.delete(`/api/admin/users/${userId}`);
+  },
+
+  // 비밀번호 강제 변경
+  changePassword: async (userId: number, password: string): Promise<void> => {
+    await apiClient.put(`/api/admin/users/${userId}/password`, { password });
+  },
+
+  // 역할 변경
+  changeRole: async (userId: number, role: UserRole): Promise<void> => {
+    await apiClient.put(`/api/admin/users/${userId}/role`, { role });
   },
 };

@@ -34,12 +34,21 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      const url = error.config?.url || '';
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+
+    if (status === 401) {
+      // 로그인 요청의 401은 세션 만료가 아님
       if (!url.includes('/api/auth/login')) {
         window.dispatchEvent(new CustomEvent('session-expired'));
       }
+    } else if (status === 403) {
+      // 로그인 요청의 403은 CSRF 오류일 수 있으므로 access-denied 이벤트 제외
+      if (!url.includes('/api/auth/login')) {
+        window.dispatchEvent(new CustomEvent('access-denied'));
+      }
     }
+
     return Promise.reject(error);
   }
 );

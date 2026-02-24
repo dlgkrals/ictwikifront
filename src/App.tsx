@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { WikiProvider, useWiki } from './context/WikiContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -16,11 +16,13 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import MyPage from './pages/MyPage';
 import AdminPage from './pages/AdminPage';
+import ForbiddenPage from './pages/ForbiddenPage';
 import './styles/wiki.css';
 
 function AppContent() {
   const { isAuthenticated } = useWiki();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
 
   // 화면 크기 변경 시 사이드바 상태 자동 조정
@@ -41,6 +43,13 @@ function AppContent() {
     }
   }, [location.pathname]);
 
+  // 403 권한 부족 → /forbidden 페이지로 이동
+  useEffect(() => {
+    const handleAccessDenied = () => navigate('/forbidden');
+    window.addEventListener('access-denied', handleAccessDenied);
+    return () => window.removeEventListener('access-denied', handleAccessDenied);
+  }, [navigate]);
+
   // 인증 없이 접근 가능한 페이지
   if (location.pathname === '/reset-password' || location.pathname === '/verify-email') {
     return (
@@ -51,6 +60,7 @@ function AppContent() {
     );
   }
 
+  // 401 → 로그인 페이지 (루트)
   if (!isAuthenticated) {
     return <LoginPage />;
   }
@@ -75,6 +85,7 @@ function AppContent() {
             <Route path="/my/:tab" element={<MyPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/:tab" element={<AdminPage />} />
+            <Route path="/forbidden" element={<ForbiddenPage />} />
           </Routes>
         </main>
       </div>

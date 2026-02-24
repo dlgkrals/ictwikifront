@@ -94,10 +94,10 @@ export function WikiProvider({ children }: WikiProviderProps) {
   }, [isAuthenticated]);
 
   // 로그인
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, rememberMe: boolean = false): Promise<boolean> => {
     try {
       setSessionExpired(false);
-      const response = await authApi.login(email, password);
+      const response = await authApi.login(email, password, rememberMe);
       setCurrentUser({
         userId: 0,
         name: response.user.name,

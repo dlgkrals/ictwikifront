@@ -349,7 +349,7 @@ export interface WikiContextType {
   currentUser: User | null;
   loading: boolean;
   sessionExpired: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   documents: DocumentSummary[];
