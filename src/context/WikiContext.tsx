@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authApi, documentApi, inquiryApi, noticeApi } from '../api';
+import { adminApi } from '../api/adminApi';
 import type {
   Document,
   Notice,
@@ -16,6 +17,8 @@ import type {
   DocumentSummary,
   NoticeSummary,
   DocumentCategoryCode,
+  RoleOption,
+  UserRole,
 } from '../types';
 
 const WikiContext = createContext<WikiContextType | null>(null);
@@ -45,6 +48,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
   const [notices, setNotices] = useState<NoticeSummary[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -54,8 +58,11 @@ export function WikiProvider({ children }: WikiProviderProps) {
       const user = await authApi.getCurrentUser();
       setCurrentUser(user);
       setIsAuthenticated(true);
-      // 인증 성공 시 데이터도 가져오기
-      await Promise.all([fetchDocuments(), fetchNotices(), fetchInquiries()]);
+      const tasks: Promise<void>[] = [fetchDocuments(), fetchNotices(), fetchInquiries()];
+      if (user.role === 'ADMIN') {
+        tasks.push(adminApi.getRoles().then(setRoleOptions).catch(() => {}));
+      }
+      await Promise.all(tasks);
     } catch {
       setCurrentUser(null);
       setIsAuthenticated(false);
@@ -106,7 +113,11 @@ export function WikiProvider({ children }: WikiProviderProps) {
         role: response.user.role,
       });
       setIsAuthenticated(true);
-      await Promise.all([fetchDocuments(), fetchNotices(), fetchInquiries()]);
+      const tasks: Promise<void>[] = [fetchDocuments(), fetchNotices(), fetchInquiries()];
+      if (response.user.role === 'ADMIN') {
+        tasks.push(adminApi.getRoles().then(setRoleOptions).catch(() => {}));
+      }
+      await Promise.all(tasks);
       return true;
     } catch (error) {
       const axiosError = error as { response?: { data?: { error?: string } } };
@@ -126,6 +137,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
       setDocuments([]);
       setNotices([]);
       setInquiries([]);
+      setRoleOptions([]);
     }
   };
 
@@ -237,6 +249,10 @@ export function WikiProvider({ children }: WikiProviderProps) {
 
   // ========== Staff Users ==========
 
+  const getRoleLabel = useCallback((code: UserRole): string => {
+    return roleOptions.find((r) => r.code === code)?.displayName ?? code;
+  }, [roleOptions]);
+
   const fetchStaffUsers = useCallback(async (): Promise<void> => {
     try {
       const list = await authApi.getStaffUsers();
@@ -279,6 +295,8 @@ export function WikiProvider({ children }: WikiProviderProps) {
             fetchInquiries,
             staffUsers,
             fetchStaffUsers,
+            roleOptions,
+            getRoleLabel,
           }}
       >
         {children}

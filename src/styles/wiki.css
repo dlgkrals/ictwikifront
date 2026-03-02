@@ -491,6 +491,12 @@ body {
   margin: 0;
 }
 
+.inquiry-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .inquiry-form {
   background-color: var(--sidebar-bg);
   border: 1px solid var(--border-color);
@@ -566,6 +572,51 @@ body {
 .inquiry-title-cell {
   font-weight: 500;
   color: var(--link-color);
+}
+
+.sub-worker-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.location-group {
+  margin-bottom: 8px;
+}
+
+.location-group-header {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.location-group-header .form-select {
+  flex: 0 0 110px;
+  width: 110px;
+  min-width: 0;
+}
+
+.location-room-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+  padding-left: 116px;
+}
+
+.location-group-header .form-input,
+.location-room-row .form-input {
+  flex: 0 0 120px;
+  width: 120px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.form-group-full,
+.edit-group-full {
+  grid-column: 1 / -1;
 }
 
 .status-badge {
@@ -664,6 +715,24 @@ body {
   min-width: 100px;
   padding: 6px 8px;
   font-size: 13px;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  padding-top: 18px;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
 }
 
 .btn-reset {
@@ -2215,6 +2284,27 @@ body {
   min-width: 0;
 }
 
+.my-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.my-section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.my-section-header h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .my-section h2 {
   font-size: 22px;
   font-weight: 600;
@@ -2482,6 +2572,11 @@ body {
 .admin-role-student {
   background-color: #f0f0f0;
   color: var(--text-muted);
+}
+
+.admin-role-manager {
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .admin-status-badge {

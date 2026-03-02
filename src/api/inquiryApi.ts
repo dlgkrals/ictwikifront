@@ -4,6 +4,7 @@ import type {
   InquiryCreateRequest,
   InquiryUpdateRequest,
   InquiryStatusEnum,
+  InquiryStatusOption,
   InquiryTypeEnum,
 } from '../types';
 
@@ -33,6 +34,12 @@ export interface InquiryDashboardStats {
 }
 
 export const inquiryApi = {
+  // 상태 옵션 조회 (COMPLETED 제외)
+  getStatusOptions: async (): Promise<InquiryStatusOption[]> => {
+    const response = await apiClient.get<InquiryStatusOption[]>('/api/inquiries/status/options');
+    return response.data;
+  },
+
   // 전체 목록 조회
   getAll: async (): Promise<Inquiry[]> => {
     const response = await apiClient.get<Inquiry[]>('/api/inquiries');
@@ -118,11 +125,8 @@ export const inquiryApi = {
   },
 
   // 민원 완료 처리
-  complete: async (id: number, solution: string): Promise<Inquiry> => {
-    const response = await apiClient.patch<Inquiry>(`/api/inquiries/${id}/complete`, {
-      solution,
-    });
-    return response.data;
+  complete: async (id: number): Promise<void> => {
+    await apiClient.patch(`/api/inquiries/${id}/complete`);
   },
 
   // 민원 삭제

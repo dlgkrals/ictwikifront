@@ -2,15 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import { adminApi } from '../api/adminApi';
-import type { AdminUser, AdminUserStats, UserRole } from '../types';
+import type { AdminUser, AdminUserStats, UserRole, RoleOption } from '../types';
 
 type AdminTab = 'dashboard' | 'users' | 'pending';
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  ADMIN: '관리자',
-  STAFF: '직원',
-  STUDENT: '학생',
-};
 
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
@@ -26,7 +20,7 @@ function calcStats(users: AdminUser[]): AdminUserStats {
     totalUsers: users.length,
     activeUsers: users.filter((u) => u.active).length,
     pendingUsers: users.filter((u) => !u.approved).length,
-    staffCount: users.filter((u) => u.role === 'STAFF').length,
+    staffCount: users.filter((u) => u.role !== 'ADMIN').length,
     adminCount: users.filter((u) => u.role === 'ADMIN').length,
   };
 }
@@ -39,6 +33,7 @@ export default function AdminPage() {
   const activeTab: AdminTab = (tab as AdminTab) || 'dashboard';
 
   const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -62,6 +57,10 @@ export default function AdminPage() {
     fetchAllUsers();
   }, [activeTab]);
 
+  useEffect(() => {
+    adminApi.getRoles().then(setRoles).catch(() => {});
+  }, []);
+
   const fetchAllUsers = async () => {
     setLoading(true);
     try {
@@ -73,6 +72,9 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  const getRoleLabel = (code: UserRole) =>
+    roles.find((r) => r.code === code)?.displayName ?? code;
 
   const handleApprove = async (userId: number) => {
     setActionLoading(userId);
@@ -187,7 +189,7 @@ export default function AdminPage() {
             <span className="admin-stat-value admin-stat-pending">{stats.pendingUsers}</span>
           </div>
           <div className="admin-stat-card">
-            <span className="admin-stat-label">직원</span>
+            <span className="admin-stat-label">일반 회원</span>
             <span className="admin-stat-value">{stats.staffCount}</span>
           </div>
           <div className="admin-stat-card">
@@ -232,7 +234,7 @@ export default function AdminPage() {
               <td>{user.email}</td>
               <td>
                 <span className={`admin-role-badge admin-role-${user.role.toLowerCase()}`}>
-                  {ROLE_LABEL[user.role]}
+                  {getRoleLabel(user.role)}
                 </span>
               </td>
               <td>
@@ -392,9 +394,9 @@ export default function AdminPage() {
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value as UserRole)}
               >
-                <option value="STUDENT">학생</option>
-                <option value="STAFF">직원</option>
-                <option value="ADMIN">관리자</option>
+                {roles.map((r) => (
+                  <option key={r.code} value={r.code}>{r.displayName}</option>
+                ))}
               </select>
             </div>
             <div className="admin-modal-actions">

@@ -1,5 +1,10 @@
 // ===== User =====
-export type UserRole = 'STUDENT' | 'STAFF' | 'ADMIN';
+export type UserRole = 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
+
+export interface RoleOption {
+  code: UserRole;
+  displayName: string;
+}
 
 export interface User {
   userId: number;
@@ -121,6 +126,11 @@ export type InquiryTypeEnum =
   | 'PERIPHERAL';
 
 export type InquiryStatusEnum = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD';
+
+export interface InquiryStatusOption {
+  code: InquiryStatusEnum;
+  displayName: string;
+}
 
 export type InquiryMethodEnum = 'REMOTE' | 'ON_SITE';
 
@@ -266,6 +276,20 @@ export const BUILDINGS: { code: BuildingCode; label: BuildingLabel }[] = [
   { code: 'SANGHAK', label: '산학관' },
 ];
 
+export interface LocationResponse {
+  buildingCode: BuildingCode;
+  buildingName: string;
+  roomNumber: number | null;
+  roomName: string | null;
+  formatted: string;
+}
+
+export interface LocationRequest {
+  building: BuildingCode;
+  roomNumber?: number;
+  roomName?: string;
+}
+
 // 백엔드 응답 타입
 export interface Inquiry {
   id: number;
@@ -274,15 +298,15 @@ export interface Inquiry {
   status: InquiryStatusEnum;
   workerId: number | null;
   workerName: string | null;
-  workDate: string | null;
+  subWorkerId: number | null;
+  subWorkerName: string | null;
   method: InquiryMethodEnum | null;
   description: string;
   solution: string;
   requester: string;
-  buildingCode: BuildingCode | null;
-  buildingName: string | null;
-  formattedRoom: string | null;
+  locations: LocationResponse[];
   createdAt: string;
+  completedAt: string | null;
   modifiedAt: string;
   createdBy: string;
   modifiedBy: string;
@@ -320,11 +344,10 @@ export interface InquiryCreateRequest {
   type: InquiryTypeEnum;
   description: string;
   requester: string;
-  buildingCode?: BuildingCode;
-  roomNumber?: number;
+  locations?: LocationRequest[];
   status?: InquiryStatusEnum;
   workerId?: number;
-  workDate?: string;
+  subWorkerId?: number;
   method?: InquiryMethodEnum;
   solution?: string;
 }
@@ -334,13 +357,12 @@ export interface InquiryUpdateRequest {
   type?: InquiryTypeEnum;
   status?: InquiryStatusEnum;
   workerId?: number;
-  workDate?: string;
+  subWorkerId?: number;
   method?: InquiryMethodEnum;
   description?: string;
   solution?: string;
   requester?: string;
-  buildingCode?: BuildingCode;
-  roomNumber?: number;
+  locations?: LocationRequest[];
 }
 
 // ===== Wiki Context =====
@@ -374,6 +396,8 @@ export interface WikiContextType {
   fetchInquiries: () => Promise<void>;
   staffUsers: StaffUser[];
   fetchStaffUsers: () => Promise<void>;
+  roleOptions: RoleOption[];
+  getRoleLabel: (code: UserRole) => string;
 }
 
 // ===== Admin =====

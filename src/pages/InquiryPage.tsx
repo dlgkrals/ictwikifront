@@ -1,25 +1,77 @@
-import { useState, useMemo, useEffect, type FormEvent, type MouseEvent } from 'react';
+import { useState, useMemo, useEffect, Fragment, type FormEvent, type MouseEvent } from 'react';
 import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
+import { inquiryApi } from '../api/inquiryApi';
 import type {
   Inquiry,
   InquiryCreateRequest,
   InquiryUpdateRequest,
   InquiryFilters,
   InquiryTypeLabel,
-  InquiryStatusLabel,
   InquiryMethodLabel,
+  InquiryStatusEnum,
+  InquiryStatusOption,
+  LocationRequest,
+  LocationResponse,
 } from '../types';
 import {
   INQUIRY_TYPE_MAP,
   INQUIRY_STATUS_MAP,
   INQUIRY_METHOD_MAP,
   INQUIRY_TYPE_REVERSE_MAP,
-  INQUIRY_STATUS_REVERSE_MAP,
   INQUIRY_METHOD_REVERSE_MAP,
   BUILDINGS,
   type BuildingCode,
 } from '../types';
+
+function formatDateTime(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  const currentYear = new Date().getFullYear();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const hour = d.getHours();
+  const minute = d.getMinutes().toString().padStart(2, '0');
+  if (year === currentYear) {
+    return `${month}월 ${day}일 ${hour}시 ${minute}분`;
+  }
+  return `${year}년 ${month}월 ${day}일 ${hour}시 ${minute}분`;
+}
+
+function formatLocationGroups(locations: LocationResponse[]): string[] {
+  if (locations.length === 0) return [];
+  const order: string[] = [];
+  const grouped = new Map<string, LocationResponse[]>();
+  for (const loc of locations) {
+    if (!grouped.has(loc.buildingCode)) {
+      order.push(loc.buildingCode);
+      grouped.set(loc.buildingCode, []);
+    }
+    grouped.get(loc.buildingCode)!.push(loc);
+  }
+  return order.map((code) => {
+    const locs = grouped.get(code)!.slice().sort((a, b) => {
+      if (a.roomNumber != null && b.roomNumber != null) return a.roomNumber - b.roomNumber;
+      if (a.roomNumber != null) return -1;
+      if (b.roomNumber != null) return 1;
+      return (a.roomName || '').localeCompare(b.roomName || '');
+    });
+    const buildingName = locs[0].buildingName;
+    if (locs.length === 1) return locs[0].formatted;
+    const allPureNumbers = locs.every((l) => l.roomNumber != null && !l.roomName);
+    if (allPureNumbers) {
+      const parts = locs.map((l, i) => (i === locs.length - 1 ? `${l.roomNumber}호` : `${l.roomNumber}`));
+      return `${buildingName} ${parts.join(', ')}`;
+    }
+    const parts = locs.map((l) => {
+      if (l.roomNumber != null && l.roomName) return `${l.roomNumber}호 ${l.roomName}`;
+      if (l.roomNumber != null) return `${l.roomNumber}호`;
+      return l.roomName || '';
+    });
+    return `${buildingName} ${parts.join(', ')}`;
+  });
+}
 
 function getRelativeTime(dateString: string): string {
   const now = new Date();
@@ -39,16 +91,28 @@ function getRelativeTime(dateString: string): string {
   return `${diffInYears}년 전`;
 }
 
+interface RoomFormItem {
+  roomNumber: string;
+  roomName: string;
+}
+
+interface LocationGroup {
+  buildingCode: BuildingCode | '';
+  rooms: RoomFormItem[];
+}
+
+const emptyRoom: RoomFormItem = { roomNumber: '', roomName: '' };
+const emptyLocationGroup: LocationGroup = { buildingCode: '', rooms: [emptyRoom] };
+
 interface InquiryFormData {
   title: string;
   type: InquiryTypeLabel;
   description: string;
   requester: string;
-  buildingCode: BuildingCode | '';
-  roomNumber: string;
-  status: InquiryStatusLabel;
+  locations: LocationGroup[];
+  status: InquiryStatusEnum;
   workerId: number | null;
-  workDate: string;
+  subWorkerId: number | null;
   method: InquiryMethodLabel;
   solution: string;
 }
@@ -58,22 +122,26 @@ const emptyForm: InquiryFormData = {
   type: 'PC',
   description: '',
   requester: '',
-  buildingCode: '',
-  roomNumber: '',
-  status: '시작 전',
+  locations: [emptyLocationGroup],
+  status: 'PENDING',
   workerId: null,
-  workDate: '',
+  subWorkerId: null,
   method: '',
   solution: '',
 };
 
 export default function InquiryPage() {
-  const { inquiries, addInquiry, updateInquiry, deleteInquiry, staffUsers, fetchStaffUsers } = useWiki();
+  const { inquiries, addInquiry, updateInquiry, deleteInquiry, fetchInquiries, staffUsers, fetchStaffUsers } = useWiki();
+  const [statusOptions, setStatusOptions] = useState<InquiryStatusOption[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<InquiryFormData>(emptyForm);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<InquiryFormData>(emptyForm);
+
+  useEffect(() => {
+    inquiryApi.getStatusOptions().then(setStatusOptions).catch(() => {});
+  }, []);
 
   // 폼이 열릴 때 STAFF 목록 가져오기
   useEffect(() => {
@@ -88,6 +156,7 @@ export default function InquiryPage() {
     worker: '전체',
     method: '전체',
   });
+  const [todayOnly, setTodayOnly] = useState(false);
 
   const workers = useMemo(() => {
     const workerSet = new Set(
@@ -97,6 +166,11 @@ export default function InquiryPage() {
   }, [inquiries]);
 
   const filteredInquiries = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayStart.getDate() + 1);
+
     return inquiries.filter((inq) => {
       const statusLabel = INQUIRY_STATUS_MAP[inq.status];
       const typeLabel = INQUIRY_TYPE_MAP[inq.type];
@@ -106,9 +180,13 @@ export default function InquiryPage() {
       if (filters.type !== '전체' && typeLabel !== filters.type) return false;
       if (filters.worker !== '전체' && inq.workerName !== filters.worker) return false;
       if (filters.method !== '전체' && methodLabel !== filters.method) return false;
+      if (todayOnly) {
+        const createdAt = new Date(inq.createdAt);
+        if (createdAt < todayStart || createdAt >= todayEnd) return false;
+      }
       return true;
     });
-  }, [inquiries, filters]);
+  }, [inquiries, filters, todayOnly]);
 
   const handleFilterChange = (key: keyof InquiryFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -121,9 +199,10 @@ export default function InquiryPage() {
       worker: '전체',
       method: '전체',
     });
+    setTodayOnly(false);
   };
 
-  const activeFilterCount = Object.values(filters).filter((v) => v !== '전체').length;
+  const activeFilterCount = Object.values(filters).filter((v) => v !== '전체').length + (todayOnly ? 1 : 0);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -131,16 +210,26 @@ export default function InquiryPage() {
       alert('작업 이름, 증상, 요청자는 필수 항목입니다.');
       return;
     }
+    const locations: LocationRequest[] = formData.locations
+      .filter((g) => g.buildingCode !== '')
+      .flatMap((g) => {
+        const validRooms = g.rooms.filter((r) => r.roomNumber || r.roomName);
+        if (validRooms.length === 0) return [{ building: g.buildingCode as BuildingCode }];
+        return validRooms.map((r) => ({
+          building: g.buildingCode as BuildingCode,
+          roomNumber: r.roomNumber ? parseInt(r.roomNumber, 10) : undefined,
+          roomName: r.roomName || undefined,
+        }));
+      });
     const request: InquiryCreateRequest = {
       title: formData.title,
       type: INQUIRY_TYPE_REVERSE_MAP[formData.type],
       description: formData.description,
       requester: formData.requester,
-      buildingCode: formData.buildingCode || undefined,
-      roomNumber: formData.roomNumber ? parseInt(formData.roomNumber, 10) : undefined,
-      status: INQUIRY_STATUS_REVERSE_MAP[formData.status],
+      locations: locations.length > 0 ? locations : undefined,
+      status: formData.status,
       workerId: formData.workerId || undefined,
-      workDate: formData.workDate || undefined,
+      subWorkerId: formData.subWorkerId || undefined,
       method: INQUIRY_METHOD_REVERSE_MAP[formData.method] || undefined,
       solution: formData.solution || undefined,
     };
@@ -160,11 +249,19 @@ export default function InquiryPage() {
       type: INQUIRY_TYPE_MAP[inquiry.type],
       description: inquiry.description,
       requester: inquiry.requester,
-      buildingCode: inquiry.buildingCode || '',
-      roomNumber: inquiry.formattedRoom ? inquiry.formattedRoom.replace(/\s*호$/, '') : '',
-      status: INQUIRY_STATUS_MAP[inquiry.status],
+      locations: (() => {
+        if (inquiry.locations.length === 0) return [emptyLocationGroup];
+        const order: string[] = [];
+        const map = new Map<string, RoomFormItem[]>();
+        for (const l of inquiry.locations) {
+          if (!map.has(l.buildingCode)) { order.push(l.buildingCode); map.set(l.buildingCode, []); }
+          map.get(l.buildingCode)!.push({ roomNumber: l.roomNumber != null ? String(l.roomNumber) : '', roomName: l.roomName || '' });
+        }
+        return order.map((code) => ({ buildingCode: code as BuildingCode, rooms: map.get(code)! }));
+      })(),
+      status: inquiry.status,
       workerId: inquiry.workerId,
-      workDate: inquiry.workDate || '',
+      subWorkerId: inquiry.subWorkerId,
       method: inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '',
       solution: inquiry.solution || '',
     });
@@ -182,17 +279,27 @@ export default function InquiryPage() {
         alert('작업 이름, 증상, 요청자는 필수 항목입니다.');
         return;
       }
+      const editLocations: LocationRequest[] = editData.locations
+        .filter((g) => g.buildingCode !== '')
+        .flatMap((g) => {
+          const validRooms = g.rooms.filter((r) => r.roomNumber || r.roomName);
+          if (validRooms.length === 0) return [{ building: g.buildingCode as BuildingCode }];
+          return validRooms.map((r) => ({
+            building: g.buildingCode as BuildingCode,
+            roomNumber: r.roomNumber ? parseInt(r.roomNumber, 10) : undefined,
+            roomName: r.roomName || undefined,
+          }));
+        });
       const updates: InquiryUpdateRequest = {
         title: editData.title,
         type: INQUIRY_TYPE_REVERSE_MAP[editData.type],
         description: editData.description,
         requester: editData.requester,
-        buildingCode: editData.buildingCode || undefined,
-        roomNumber: editData.roomNumber ? parseInt(editData.roomNumber, 10) : undefined,
-        status: INQUIRY_STATUS_REVERSE_MAP[editData.status],
+        locations: editLocations,
+        status: editData.status,
         workerId: editData.workerId || undefined,
+        subWorkerId: editData.subWorkerId || undefined,
         method: INQUIRY_METHOD_REVERSE_MAP[editData.method] || undefined,
-        workDate: editData.workDate || undefined,
         solution: editData.solution || undefined,
       };
       await updateInquiry(editingId, updates);
@@ -231,6 +338,12 @@ export default function InquiryPage() {
       await deleteInquiry(id);
       setExpandedId(null);
     }
+  };
+
+  const handleComplete = async (id: number, e: MouseEvent) => {
+    e.stopPropagation();
+    await inquiryApi.complete(id);
+    await fetchInquiries();
   };
 
   return (
@@ -299,6 +412,14 @@ export default function InquiryPage() {
               ))}
             </select>
           </div>
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={todayOnly}
+              onChange={(e) => setTodayOnly(e.target.checked)}
+            />
+            당일 민원만 보기
+          </label>
           {activeFilterCount > 0 && (
             <button className="btn btn-sm btn-reset" onClick={resetFilters}>
               필터 초기화
@@ -333,30 +454,112 @@ export default function InquiryPage() {
                 placeholder="예: 간호학과 조교"
               />
             </div>
-            <div className="form-group">
-              <label>건물</label>
-              <select
-                value={formData.buildingCode}
-                onChange={(e) => handleChange('buildingCode', e.target.value)}
-                className="form-select"
+            <div className="form-group form-group-full">
+              <label>위치</label>
+              {formData.locations.map((group, gIdx) => (
+                <div key={gIdx} className="location-group">
+                  <div className="location-group-header">
+                    <select
+                      value={group.buildingCode}
+                      onChange={(e) => {
+                        const next = [...formData.locations];
+                        next[gIdx] = { ...next[gIdx], buildingCode: e.target.value as BuildingCode | '' };
+                        handleChange('locations', next);
+                      }}
+                      className="form-select"
+                    >
+                      <option value="">건물 선택</option>
+                      {BUILDINGS.map((b) => (<option key={b.code} value={b.code}>{b.label}</option>))}
+                    </select>
+                    <input
+                      type="text"
+                      value={group.rooms[0].roomNumber}
+                      onChange={(e) => {
+                        const next = [...formData.locations];
+                        next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === 0 ? { ...r, roomNumber: e.target.value } : r) };
+                        handleChange('locations', next);
+                      }}
+                      className="form-input"
+                      placeholder="예: 502"
+                    />
+                    <input
+                      type="text"
+                      value={group.rooms[0].roomName}
+                      onChange={(e) => {
+                        const next = [...formData.locations];
+                        next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === 0 ? { ...r, roomName: e.target.value } : r) };
+                        handleChange('locations', next);
+                      }}
+                      className="form-input"
+                      placeholder="예: 소강당"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => {
+                        const next = [...formData.locations];
+                        next[gIdx] = { ...next[gIdx], rooms: [...next[gIdx].rooms, emptyRoom] };
+                        handleChange('locations', next);
+                      }}
+                    >
+                      + 호실 추가
+                    </button>
+                    {formData.locations.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleChange('locations', formData.locations.filter((_, i) => i !== gIdx))}
+                      >
+                        건물 삭제
+                      </button>
+                    )}
+                  </div>
+                  {group.rooms.slice(1).map((room, rIdx) => (
+                    <div key={rIdx + 1} className="location-room-row">
+                      <input
+                        type="text"
+                        value={room.roomNumber}
+                        onChange={(e) => {
+                          const next = [...formData.locations];
+                          next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === rIdx + 1 ? { ...r, roomNumber: e.target.value } : r) };
+                          handleChange('locations', next);
+                        }}
+                        className="form-input"
+                        placeholder="예: 502"
+                      />
+                      <input
+                        type="text"
+                        value={room.roomName}
+                        onChange={(e) => {
+                          const next = [...formData.locations];
+                          next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === rIdx + 1 ? { ...r, roomName: e.target.value } : r) };
+                          handleChange('locations', next);
+                        }}
+                        className="form-input"
+                        placeholder="예: 소강당"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => {
+                          const next = [...formData.locations];
+                          next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.filter((_, i) => i !== rIdx + 1) };
+                          handleChange('locations', next);
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                onClick={() => handleChange('locations', [...formData.locations, emptyLocationGroup])}
               >
-                <option value="">선택</option>
-                {BUILDINGS.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>호실</label>
-              <input
-                type="text"
-                value={formData.roomNumber}
-                onChange={(e) => handleChange('roomNumber', e.target.value)}
-                className="form-input"
-                placeholder="예: 502"
-              />
+                + 건물 추가
+              </button>
             </div>
             <div className="form-group">
               <label>유형</label>
@@ -379,9 +582,9 @@ export default function InquiryPage() {
                 onChange={(e) => handleChange('status', e.target.value)}
                 className="form-select"
               >
-                {INQUIRY_STATUS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                {statusOptions.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {s.displayName}
                   </option>
                 ))}
               </select>
@@ -402,13 +605,19 @@ export default function InquiryPage() {
               </select>
             </div>
             <div className="form-group">
-              <label>작업 날짜</label>
-              <input
-                type="date"
-                value={formData.workDate}
-                onChange={(e) => handleChange('workDate', e.target.value)}
-                className="form-input"
-              />
+              <label>보조 작업자</label>
+              <select
+                value={formData.subWorkerId ?? ''}
+                onChange={(e) => handleChange('subWorkerId', e.target.value ? Number(e.target.value) : null)}
+                className="form-select"
+              >
+                <option value="">선택</option>
+                {staffUsers.map((staff) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label>처리 방식</label>
@@ -491,9 +700,8 @@ export default function InquiryPage() {
               const methodLabel = inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '-';
 
               return (
-                <>
+                <Fragment key={inquiry.id}>
                   <tr
-                    key={inquiry.id}
                     className={`inquiry-row ${isExpanded ? 'expanded' : ''}`}
                     onClick={() => handleRowClick(inquiry.id)}
                   >
@@ -505,11 +713,17 @@ export default function InquiryPage() {
                     <td>{typeLabel}</td>
                     <td className="inquiry-title-cell">{inquiry.title}</td>
                     <td>{inquiry.requester}</td>
-                    <td>{inquiry.workerName || '-'}</td>
                     <td>
-                      {inquiry.buildingName || inquiry.formattedRoom
-                        ? `${inquiry.buildingName || ''}${inquiry.buildingName && inquiry.formattedRoom ? ' ' : ''}${inquiry.formattedRoom || ''}`
-                        : '-'}
+                      <div>{inquiry.workerName || '-'}</div>
+                      {inquiry.subWorkerName && (
+                        <div className="sub-worker-name">{inquiry.subWorkerName}</div>
+                      )}
+                    </td>
+                    <td>
+                      {(() => {
+                        const groups = formatLocationGroups(inquiry.locations);
+                        return groups.length > 0 ? groups.join(', ') : '-';
+                      })()}
                     </td>
                     <td>{methodLabel}</td>
                     <td>{getRelativeTime(inquiry.createdAt)}</td>
@@ -538,30 +752,112 @@ export default function InquiryPage() {
                                   className="form-input"
                                 />
                               </div>
-                              <div className="edit-group">
-                                <label>건물</label>
-                                <select
-                                  value={editData.buildingCode}
-                                  onChange={(e) => handleEditChange('buildingCode', e.target.value)}
-                                  className="form-select"
+                              <div className="edit-group edit-group-full">
+                                <label>위치</label>
+                                {editData.locations.map((group, gIdx) => (
+                                  <div key={gIdx} className="location-group">
+                                    <div className="location-group-header">
+                                      <select
+                                        value={group.buildingCode}
+                                        onChange={(e) => {
+                                          const next = [...editData.locations];
+                                          next[gIdx] = { ...next[gIdx], buildingCode: e.target.value as BuildingCode | '' };
+                                          handleEditChange('locations', next);
+                                        }}
+                                        className="form-select"
+                                      >
+                                        <option value="">건물 선택</option>
+                                        {BUILDINGS.map((b) => (<option key={b.code} value={b.code}>{b.label}</option>))}
+                                      </select>
+                                      <input
+                                        type="text"
+                                        value={group.rooms[0].roomNumber}
+                                        onChange={(e) => {
+                                          const next = [...editData.locations];
+                                          next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === 0 ? { ...r, roomNumber: e.target.value } : r) };
+                                          handleEditChange('locations', next);
+                                        }}
+                                        className="form-input"
+                                        placeholder="예: 502"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={group.rooms[0].roomName}
+                                        onChange={(e) => {
+                                          const next = [...editData.locations];
+                                          next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === 0 ? { ...r, roomName: e.target.value } : r) };
+                                          handleEditChange('locations', next);
+                                        }}
+                                        className="form-input"
+                                        placeholder="예: 소강당"
+                                      />
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-secondary"
+                                        onClick={() => {
+                                          const next = [...editData.locations];
+                                          next[gIdx] = { ...next[gIdx], rooms: [...next[gIdx].rooms, emptyRoom] };
+                                          handleEditChange('locations', next);
+                                        }}
+                                      >
+                                        + 호실 추가
+                                      </button>
+                                      {editData.locations.length > 1 && (
+                                        <button
+                                          type="button"
+                                          className="btn btn-sm btn-danger"
+                                          onClick={() => handleEditChange('locations', editData.locations.filter((_, i) => i !== gIdx))}
+                                        >
+                                          건물 삭제
+                                        </button>
+                                      )}
+                                    </div>
+                                    {group.rooms.slice(1).map((room, rIdx) => (
+                                      <div key={rIdx + 1} className="location-room-row">
+                                        <input
+                                          type="text"
+                                          value={room.roomNumber}
+                                          onChange={(e) => {
+                                            const next = [...editData.locations];
+                                            next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === rIdx + 1 ? { ...r, roomNumber: e.target.value } : r) };
+                                            handleEditChange('locations', next);
+                                          }}
+                                          className="form-input"
+                                          placeholder="예: 502"
+                                        />
+                                        <input
+                                          type="text"
+                                          value={room.roomName}
+                                          onChange={(e) => {
+                                            const next = [...editData.locations];
+                                            next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.map((r, i) => i === rIdx + 1 ? { ...r, roomName: e.target.value } : r) };
+                                            handleEditChange('locations', next);
+                                          }}
+                                          className="form-input"
+                                          placeholder="예: 소강당"
+                                        />
+                                        <button
+                                          type="button"
+                                          className="btn btn-sm btn-danger"
+                                          onClick={() => {
+                                            const next = [...editData.locations];
+                                            next[gIdx] = { ...next[gIdx], rooms: next[gIdx].rooms.filter((_, i) => i !== rIdx + 1) };
+                                            handleEditChange('locations', next);
+                                          }}
+                                        >
+                                          삭제
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-secondary"
+                                  onClick={() => handleEditChange('locations', [...editData.locations, emptyLocationGroup])}
                                 >
-                                  <option value="">선택</option>
-                                  {BUILDINGS.map((b) => (
-                                    <option key={b.code} value={b.code}>
-                                      {b.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="edit-group">
-                                <label>호실</label>
-                                <input
-                                  type="text"
-                                  value={editData.roomNumber}
-                                  onChange={(e) => handleEditChange('roomNumber', e.target.value)}
-                                  className="form-input"
-                                  placeholder="예: 502"
-                                />
+                                  + 건물 추가
+                                </button>
                               </div>
                               <div className="edit-group">
                                 <label>유형</label>
@@ -584,13 +880,13 @@ export default function InquiryPage() {
                                 <select
                                   value={editData.status}
                                   onChange={(e) =>
-                                    handleEditChange('status', e.target.value as InquiryStatusLabel)
+                                    handleEditChange('status', e.target.value as InquiryStatusEnum)
                                   }
                                   className="form-select"
                                 >
-                                  {INQUIRY_STATUS.map((s) => (
-                                    <option key={s} value={s}>
-                                      {s}
+                                  {statusOptions.map((s) => (
+                                    <option key={s.code} value={s.code}>
+                                      {s.displayName}
                                     </option>
                                   ))}
                                 </select>
@@ -611,13 +907,19 @@ export default function InquiryPage() {
                                 </select>
                               </div>
                               <div className="edit-group">
-                                <label>작업 날짜</label>
-                                <input
-                                  type="date"
-                                  value={editData.workDate}
-                                  onChange={(e) => handleEditChange('workDate', e.target.value)}
-                                  className="form-input"
-                                />
+                                <label>보조 작업자</label>
+                                <select
+                                  value={editData.subWorkerId ?? ''}
+                                  onChange={(e) => handleEditChange('subWorkerId', e.target.value ? Number(e.target.value) : null)}
+                                  className="form-select"
+                                >
+                                  <option value="">선택</option>
+                                  {staffUsers.map((staff) => (
+                                    <option key={staff.id} value={staff.id}>
+                                      {staff.name}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div className="edit-group">
                                 <label>처리 방식</label>
@@ -677,6 +979,14 @@ export default function InquiryPage() {
                               >
                                 수정
                               </button>
+                              {inquiry.status !== 'COMPLETED' && (
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={(e: MouseEvent) => handleComplete(inquiry.id, e)}
+                                >
+                                  완료
+                                </button>
+                              )}
                               <button
                                 className="btn btn-sm btn-danger"
                                 onClick={(e: MouseEvent) => {
@@ -688,19 +998,23 @@ export default function InquiryPage() {
                               </button>
                             </div>
                             <div className="detail-content">
-                              {(inquiry.buildingName || inquiry.formattedRoom) && (
+                              {inquiry.locations.length > 0 && (
                                 <div className="detail-row">
                                   <span className="detail-label">위치:</span>
                                   <span>
-                                    {inquiry.buildingName || ''}
-                                    {inquiry.buildingName && inquiry.formattedRoom ? ' ' : ''}
-                                    {inquiry.formattedRoom || ''}
+                                    {formatLocationGroups(inquiry.locations).map((g, i) => (
+                                      <span key={i}>{i > 0 && <br />}{g}</span>
+                                    ))}
                                   </span>
                                 </div>
                               )}
                               <div className="detail-row">
-                                <span className="detail-label">작업 날짜:</span>
-                                <span>{inquiry.workDate || '미정'}</span>
+                                <span className="detail-label">접수 날짜:</span>
+                                <span>{formatDateTime(inquiry.createdAt)}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">처리 날짜:</span>
+                                <span>{formatDateTime(inquiry.completedAt)}</span>
                               </div>
                               {inquiry.description && (
                                 <div className="detail-row">
@@ -720,7 +1034,7 @@ export default function InquiryPage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })
           )}

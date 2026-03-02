@@ -33,18 +33,32 @@ apiClient.interceptors.request.use(
 // Response interceptor - 에러 처리
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error.response?.status;
     const url = error.config?.url || '';
+    const isLoginUrl = url.includes('/api/auth/login');
+
+    if (status === 403 && isLoginUrl && !error.config._csrfRetried) {
+      // 로그인 403은 CSRF 토큰 만료일 수 있음 → 토큰 갱신 후 1회 재시도
+      error.config._csrfRetried = true;
+      try {
+        const tokenRes = await apiClient.get<{ csrfToken: string }>('/api/auth/csrf-token');
+        if (tokenRes.data.csrfToken) {
+          setCsrfToken(tokenRes.data.csrfToken);
+          error.config.headers['X-XSRF-TOKEN'] = tokenRes.data.csrfToken;
+        }
+        return apiClient(error.config);
+      } catch {
+        // 재시도 실패 시 원래 에러 그대로 전달
+      }
+    }
 
     if (status === 401) {
-      // 로그인 요청의 401은 세션 만료가 아님
-      if (!url.includes('/api/auth/login')) {
+      if (!isLoginUrl) {
         window.dispatchEvent(new CustomEvent('session-expired'));
       }
     } else if (status === 403) {
-      // 로그인 요청의 403은 CSRF 오류일 수 있으므로 access-denied 이벤트 제외
-      if (!url.includes('/api/auth/login')) {
+      if (!isLoginUrl) {
         window.dispatchEvent(new CustomEvent('access-denied'));
       }
     }

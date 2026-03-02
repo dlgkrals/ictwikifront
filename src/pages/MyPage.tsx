@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
-import { authApi, documentApi, inquiryApi } from '../api';
-import type { DocumentSummary, Inquiry } from '../types';
-import { INQUIRY_STATUS_MAP, INQUIRY_TYPE_MAP } from '../types';
+import { authApi, documentApi, inquiryApi, reportApi } from '../api';
+import type { DocumentSummary, Inquiry, LocationResponse } from '../types';
+import { INQUIRY_STATUS_MAP, INQUIRY_TYPE_MAP, INQUIRY_METHOD_MAP } from '../types';
 
 type MyPageTab = 'info' | 'password' | 'documents' | 'inquiries';
 
@@ -25,10 +25,59 @@ function getRelativeTime(dateString: string): string {
   return `${diffInYears}년 전`;
 }
 
+function formatDateTime(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  const currentYear = new Date().getFullYear();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const hour = d.getHours();
+  const minute = d.getMinutes().toString().padStart(2, '0');
+  if (year === currentYear) {
+    return `${month}월 ${day}일 ${hour}시 ${minute}분`;
+  }
+  return `${year}년 ${month}월 ${day}일 ${hour}시 ${minute}분`;
+}
+
+function formatLocationGroups(locations: LocationResponse[]): string[] {
+  if (locations.length === 0) return [];
+  const order: string[] = [];
+  const grouped = new Map<string, LocationResponse[]>();
+  for (const loc of locations) {
+    if (!grouped.has(loc.buildingCode)) {
+      order.push(loc.buildingCode);
+      grouped.set(loc.buildingCode, []);
+    }
+    grouped.get(loc.buildingCode)!.push(loc);
+  }
+  return order.map((code) => {
+    const locs = grouped.get(code)!.slice().sort((a, b) => {
+      if (a.roomNumber != null && b.roomNumber != null) return a.roomNumber - b.roomNumber;
+      if (a.roomNumber != null) return -1;
+      if (b.roomNumber != null) return 1;
+      return (a.roomName || '').localeCompare(b.roomName || '');
+    });
+    const buildingName = locs[0].buildingName;
+    if (locs.length === 1) return locs[0].formatted;
+    const allPureNumbers = locs.every((l) => l.roomNumber != null && !l.roomName);
+    if (allPureNumbers) {
+      const parts = locs.map((l, i) => (i === locs.length - 1 ? `${l.roomNumber}호` : `${l.roomNumber}`));
+      return `${buildingName} ${parts.join(', ')}`;
+    }
+    const parts = locs.map((l) => {
+      if (l.roomNumber != null && l.roomName) return `${l.roomNumber}호 ${l.roomName}`;
+      if (l.roomNumber != null) return `${l.roomNumber}호`;
+      return l.roomName || '';
+    });
+    return `${buildingName} ${parts.join(', ')}`;
+  });
+}
+
 export default function MyPage() {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const { currentUser } = useWiki();
+  const { currentUser, getRoleLabel } = useWiki();
 
   const activeTab: MyPageTab = (tab as MyPageTab) || 'info';
 
@@ -47,6 +96,21 @@ export default function MyPage() {
   // My inquiries state
   const [myInquiries, setMyInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
+  const [reportDownloading, setReportDownloading] = useState(false);
+  const [expandedInquiryId, setExpandedInquiryId] = useState<number | null>(null);
+  const [todayOnly, setTodayOnly] = useState(false);
+
+  const displayedInquiries = useMemo(() => {
+    if (!todayOnly) return myInquiries;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayStart.getDate() + 1);
+    return myInquiries.filter((inq) => {
+      const createdAt = new Date(inq.createdAt);
+      return createdAt >= todayStart && createdAt < todayEnd;
+    });
+  }, [myInquiries, todayOnly]);
 
   useEffect(() => {
     if (activeTab === 'documents') {
@@ -77,6 +141,18 @@ export default function MyPage() {
       console.error('Failed to fetch my inquiries:', error);
     } finally {
       setInquiriesLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    setReportDownloading(true);
+    try {
+      await reportApi.downloadDailyReport();
+    } catch (error) {
+      console.error('Failed to download report:', error);
+      alert('업무 일지 다운로드에 실패했습니다.');
+    } finally {
+      setReportDownloading(false);
     }
   };
 
@@ -144,7 +220,7 @@ export default function MyPage() {
               <div className="info-row">
                 <span className="info-label">역할</span>
                 <span className="info-value">
-                  {currentUser?.role === 'ADMIN' ? '관리자' : currentUser?.role === 'STAFF' ? '직원' : '학생'}
+                  {currentUser?.role ? getRoleLabel(currentUser.role) : ''}
                 </span>
               </div>
             </div>
@@ -232,10 +308,29 @@ export default function MyPage() {
       case 'inquiries':
         return (
           <div className="my-section">
-            <h2>내가 처리한 민원</h2>
+            <div className="my-section-header">
+              <div className="my-section-header-left">
+                <h2>내가 처리한 민원</h2>
+                <label className="filter-checkbox" style={{ paddingTop: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={todayOnly}
+                    onChange={(e) => setTodayOnly(e.target.checked)}
+                  />
+                  당일 민원만 보기
+                </label>
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={handleDownloadReport}
+                disabled={reportDownloading}
+              >
+                {reportDownloading ? '생성 중...' : '업무 일지 생성'}
+              </button>
+            </div>
             {inquiriesLoading ? (
               <p>로딩 중...</p>
-            ) : myInquiries.length === 0 ? (
+            ) : displayedInquiries.length === 0 ? (
               <p className="empty-message">처리한 민원이 없습니다.</p>
             ) : (
               <table className="my-table">
@@ -245,23 +340,87 @@ export default function MyPage() {
                     <th>유형</th>
                     <th>제목</th>
                     <th>요청자</th>
+                    <th>작업자</th>
+                    <th>위치</th>
+                    <th>처리</th>
                     <th>등록일</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {myInquiries.map((inquiry) => (
-                    <tr key={inquiry.id} onClick={() => navigate('/inquiries')} className="clickable-row">
-                      <td>
-                        <span className={`status-badge status-${inquiry.status.toLowerCase().replace('_', '-')}`}>
-                          {INQUIRY_STATUS_MAP[inquiry.status]}
-                        </span>
-                      </td>
-                      <td>{INQUIRY_TYPE_MAP[inquiry.type]}</td>
-                      <td>{inquiry.title}</td>
-                      <td>{inquiry.requester}</td>
-                      <td>{getRelativeTime(inquiry.createdAt)}</td>
-                    </tr>
-                  ))}
+                  {displayedInquiries.map((inquiry) => {
+                    const isExpanded = expandedInquiryId === inquiry.id;
+                    return (
+                      <Fragment key={inquiry.id}>
+                        <tr
+                          onClick={() => setExpandedInquiryId(isExpanded ? null : inquiry.id)}
+                          className={`clickable-row ${isExpanded ? 'expanded' : ''}`}
+                        >
+                          <td>
+                            <span className={`status-badge status-${inquiry.status.toLowerCase().replace('_', '-')}`}>
+                              {INQUIRY_STATUS_MAP[inquiry.status]}
+                            </span>
+                          </td>
+                          <td>{INQUIRY_TYPE_MAP[inquiry.type]}</td>
+                          <td>{inquiry.title}</td>
+                          <td>{inquiry.requester}</td>
+                          <td>
+                            <div>{inquiry.workerName || '-'}</div>
+                            {inquiry.subWorkerName && (
+                              <div className="sub-worker-name">{inquiry.subWorkerName}</div>
+                            )}
+                          </td>
+                          <td>
+                            {(() => {
+                              const groups = formatLocationGroups(inquiry.locations);
+                              return groups.length > 0 ? groups.join(', ') : '-';
+                            })()}
+                          </td>
+                          <td>{inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '-'}</td>
+                          <td>{formatDateTime(inquiry.createdAt)}</td>
+                        </tr>
+                        {isExpanded && (
+                          <tr className="inquiry-detail-row">
+                            <td colSpan={8}>
+                              <div className="inquiry-detail">
+                                <div className="detail-content">
+                                  {inquiry.locations.length > 0 && (
+                                    <div className="detail-row">
+                                      <span className="detail-label">위치:</span>
+                                      <span>
+                                        {formatLocationGroups(inquiry.locations).map((g, i) => (
+                                          <span key={i}>{i > 0 && <br />}{g}</span>
+                                        ))}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="detail-row">
+                                    <span className="detail-label">접수 날짜:</span>
+                                    <span>{formatDateTime(inquiry.createdAt)}</span>
+                                  </div>
+                                  <div className="detail-row">
+                                    <span className="detail-label">처리 날짜:</span>
+                                    <span>{formatDateTime(inquiry.completedAt)}</span>
+                                  </div>
+                                  {inquiry.description && (
+                                    <div className="detail-row">
+                                      <span className="detail-label">증상:</span>
+                                      <span className="detail-text">{inquiry.description}</span>
+                                    </div>
+                                  )}
+                                  {inquiry.solution && (
+                                    <div className="detail-row solution">
+                                      <span className="detail-label">해결 내용:</span>
+                                      <span className="detail-text">{inquiry.solution}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

@@ -5,3 +5,4 @@ export { inquiryApi } from './inquiryApi';
 export type { InquiryDashboardStats, InquiryStatsItem } from './inquiryApi';
 export { noticeApi } from './noticeApi';
 export { adminApi } from './adminApi';
+export { reportApi } from './reportApi';
