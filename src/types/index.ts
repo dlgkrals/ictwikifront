@@ -1,5 +1,5 @@
 // ===== User =====
-export type UserRole = 'STUDENT' | 'STAFF' | 'MANAGER' | 'ADMIN';
+export type UserRole = 'STUDENT' | 'STAFF' | 'MANAGER' | 'TA' | 'ADMIN';
 
 export interface RoleOption {
   code: UserRole;
@@ -125,7 +125,7 @@ export type InquiryTypeEnum =
   | 'PROJECTOR'
   | 'PERIPHERAL';
 
-export type InquiryStatusEnum = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD';
+export type InquiryStatusEnum = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD' | 'OVERNIGHT';
 
 export interface InquiryStatusOption {
   code: InquiryStatusEnum;
@@ -145,7 +145,7 @@ export type InquiryTypeLabel =
   | '빔프로젝터'
   | '주변기기';
 
-export type InquiryStatusLabel = '시작 전' | '진행 중' | '완료' | '보류';
+export type InquiryStatusLabel = '시작 전' | '진행 중' | '완료' | '보류' | '야간';
 
 export type InquiryMethodLabel = '원격' | '방문' | '';
 
@@ -177,6 +177,7 @@ export const INQUIRY_STATUS_MAP: Record<InquiryStatusEnum, InquiryStatusLabel> =
   IN_PROGRESS: '진행 중',
   COMPLETED: '완료',
   ON_HOLD: '보류',
+  OVERNIGHT: '야간',
 };
 
 export const INQUIRY_STATUS_REVERSE_MAP: Record<InquiryStatusLabel, InquiryStatusEnum> = {
@@ -184,6 +185,7 @@ export const INQUIRY_STATUS_REVERSE_MAP: Record<InquiryStatusLabel, InquiryStatu
   '진행 중': 'IN_PROGRESS',
   '완료': 'COMPLETED',
   '보류': 'ON_HOLD',
+  '야간': 'OVERNIGHT',
 };
 
 export const INQUIRY_METHOD_MAP: Record<InquiryMethodEnum, InquiryMethodLabel> = {

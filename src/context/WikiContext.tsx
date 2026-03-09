@@ -29,7 +29,7 @@ export const INQUIRY_TYPES: InquiryTypeLabel[] = [
   '전자교탁', '빔프로젝터', '주변기기',
 ];
 
-export const INQUIRY_STATUS: InquiryStatusLabel[] = ['시작 전', '진행 중', '완료', '보류'];
+export const INQUIRY_STATUS: InquiryStatusLabel[] = ['시작 전', '진행 중', '완료', '보류', '야간'];
 
 export const INQUIRY_METHOD: InquiryMethodLabel[] = ['원격', '방문'];
 
@@ -59,7 +59,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
       setCurrentUser(user);
       setIsAuthenticated(true);
       const tasks: Promise<void>[] = [fetchDocuments(), fetchNotices(), fetchInquiries()];
-      if (user.role === 'ADMIN') {
+      if (user.role === 'ADMIN' || user.role === 'TA') {
         tasks.push(adminApi.getRoles().then(setRoleOptions).catch(() => {}));
       }
       await Promise.all(tasks);
@@ -114,7 +114,7 @@ export function WikiProvider({ children }: WikiProviderProps) {
       });
       setIsAuthenticated(true);
       const tasks: Promise<void>[] = [fetchDocuments(), fetchNotices(), fetchInquiries()];
-      if (response.user.role === 'ADMIN') {
+      if (response.user.role === 'ADMIN' || response.user.role === 'TA') {
         tasks.push(adminApi.getRoles().then(setRoleOptions).catch(() => {}));
       }
       await Promise.all(tasks);

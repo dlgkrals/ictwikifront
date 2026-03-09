@@ -647,6 +647,11 @@ body {
   color: #000;
 }
 
+.status-overnight {
+  background-color: #6f42c1;
+  color: white;
+}
+
 .inquiry-detail-row {
   background-color: #f8f9fa;
 }
@@ -2577,6 +2582,11 @@ body {
 .admin-role-manager {
   background-color: #e8f5e9;
   color: #2e7d32;
+}
+
+.admin-role-ta {
+  background-color: #fff3e0;
+  color: #e65100;
 }
 
 .admin-status-badge {

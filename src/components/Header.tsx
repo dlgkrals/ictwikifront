@@ -50,7 +50,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         <SearchBar />
       </div>
       <div className="header-right">
-        {currentUser?.role === 'ADMIN' && (
+        {(currentUser?.role === 'ADMIN' || currentUser?.role === 'TA') && (
           <Link to="/admin/dashboard" className="admin-header-btn" title="관리자 페이지">
             관리자
           </Link>

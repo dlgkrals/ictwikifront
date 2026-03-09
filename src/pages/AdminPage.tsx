@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [roleModal, setRoleModal] = useState<{ userId: number; name: string; currentRole: UserRole } | null>(null);
   const [newRole, setNewRole] = useState<UserRole>('STUDENT');
 
-  if (currentUser?.role !== 'ADMIN') {
+  if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'TA') {
     return (
       <div className="page">
         <h1 className="page-title">접근 권한이 없습니다</h1>

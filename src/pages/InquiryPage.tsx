@@ -39,6 +39,32 @@ function formatDateTime(dateString: string | null | undefined): string {
   return `${year}년 ${month}월 ${day}일 ${hour}시 ${minute}분`;
 }
 
+function formatRoomParts(locs: LocationResponse[]): string[] {
+  const parts: string[] = [];
+  let i = 0;
+  while (i < locs.length) {
+    const loc = locs[i];
+    if (loc.roomNumber != null && !loc.roomName) {
+      let j = i + 1;
+      while (j < locs.length && locs[j].roomNumber != null && !locs[j].roomName && locs[j].roomNumber === locs[j - 1].roomNumber! + 1) {
+        j++;
+      }
+      if (j - i === 1) {
+        parts.push(`${loc.roomNumber}호`);
+      } else {
+        parts.push(`${loc.roomNumber}~${locs[j - 1].roomNumber}호`);
+      }
+      i = j;
+    } else {
+      if (loc.roomNumber != null && loc.roomName) parts.push(`${loc.roomNumber}호 ${loc.roomName}`);
+      else if (loc.roomNumber != null) parts.push(`${loc.roomNumber}호`);
+      else parts.push(loc.roomName || '');
+      i++;
+    }
+  }
+  return parts;
+}
+
 function formatLocationGroups(locations: LocationResponse[]): string[] {
   if (locations.length === 0) return [];
   const order: string[] = [];
@@ -57,19 +83,9 @@ function formatLocationGroups(locations: LocationResponse[]): string[] {
       if (b.roomNumber != null) return 1;
       return (a.roomName || '').localeCompare(b.roomName || '');
     });
-    const buildingName = locs[0].buildingName;
     if (locs.length === 1) return locs[0].formatted;
-    const allPureNumbers = locs.every((l) => l.roomNumber != null && !l.roomName);
-    if (allPureNumbers) {
-      const parts = locs.map((l, i) => (i === locs.length - 1 ? `${l.roomNumber}호` : `${l.roomNumber}`));
-      return `${buildingName} ${parts.join(', ')}`;
-    }
-    const parts = locs.map((l) => {
-      if (l.roomNumber != null && l.roomName) return `${l.roomNumber}호 ${l.roomName}`;
-      if (l.roomNumber != null) return `${l.roomNumber}호`;
-      return l.roomName || '';
-    });
-    return `${buildingName} ${parts.join(', ')}`;
+    const buildingName = locs[0].buildingName;
+    return `${buildingName} ${formatRoomParts(locs).join(', ')}`;
   });
 }
 
@@ -238,7 +254,7 @@ export default function InquiryPage() {
     setShowForm(false);
   };
 
-  const handleChange = (field: keyof InquiryFormData, value: string | number | null) => {
+  const handleChange = (field: keyof InquiryFormData, value: string | number | null | LocationGroup[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -308,7 +324,7 @@ export default function InquiryPage() {
     }
   };
 
-  const handleEditChange = (field: keyof InquiryFormData, value: string | number | null) => {
+  const handleEditChange = (field: keyof InquiryFormData, value: string | number | null | LocationGroup[]) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -323,6 +339,8 @@ export default function InquiryPage() {
         return 'status-done';
       case '보류':
         return 'status-hold';
+      case '야간':
+        return 'status-overnight';
       default:
         return '';
     }
