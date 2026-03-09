@@ -120,8 +120,8 @@ export function WikiProvider({ children }: WikiProviderProps) {
       await Promise.all(tasks);
       return true;
     } catch (error) {
-      const axiosError = error as { response?: { data?: { error?: string } } };
-      throw new Error(axiosError.response?.data?.error || '아이디 또는 비밀번호가 올바르지 않습니다.');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      throw new Error(axiosError.response?.data?.message || '로그인에 실패했습니다.');
     }
   };
 
