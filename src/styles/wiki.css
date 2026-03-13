@@ -2520,6 +2520,36 @@ body {
   gap: 10px;
 }
 
+.admin-rag-section {
+  margin-top: 24px;
+  padding: 20px;
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.admin-rag-section h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.admin-rag-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.admin-rag-result {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background-color: #f0f8ff;
+  border: 1px solid #b3d7ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #0055aa;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -3198,4 +3228,104 @@ body {
     width: 100%;
     text-align: right;
   }
+}
+
+/* ===== RAG 전구 버튼 & 말풍선 ===== */
+
+.btn-rag {
+  background: none;
+  border: 1px solid #d4b800;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.inquiry-rag-cell {
+  width: 36px;
+  text-align: center;
+  padding: 4px 6px;
+}
+
+.btn-rag:hover {
+  background-color: #fffacc;
+}
+
+.btn-rag.active {
+  background-color: #fff5b0;
+  border-color: #b09000;
+}
+
+.rag-bubble {
+  position: relative;
+  background-color: #fffdf0;
+  border: 1px solid #e0c84a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 10px 0 12px 0;
+  font-size: 13px;
+}
+
+
+.rag-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.rag-loading {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.rag-error {
+  color: var(--danger-color);
+  font-size: 13px;
+}
+
+.rag-summary {
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.rag-references-title {
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rag-reference-item {
+  background-color: #fff;
+  border: 1px solid #e8e4cc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.rag-reference-item:last-child {
+  margin-bottom: 0;
+}
+
+.rag-reference-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.rag-reference-problem,
+.rag-reference-solution {
+  margin-top: 3px;
+  line-height: 1.5;
 }

@@ -402,6 +402,29 @@ export interface WikiContextType {
   getRoleLabel: (code: UserRole) => string;
 }
 
+// ===== RAG =====
+export interface ReferenceItem {
+  inquiryId: number;
+  type: string;
+  location: string;
+  problem: string;
+  solution: string;
+}
+
+export interface SimilarCaseResult {
+  summary: string;
+  referenceCount: number;
+  references: ReferenceItem[];
+}
+
+export interface BatchEmbedResult {
+  total: number;
+  success: number;
+  skipped: number;
+  failed: number;
+  message: string;
+}
+
 // ===== Admin =====
 export interface AdminUser {
   id: number;

@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, Fragment, type FormEvent, type MouseEvent
 import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
 import { inquiryApi } from '../api/inquiryApi';
+import { ragApi } from '../api/ragApi';
+import type { SimilarCaseResult } from '../types';
 import type {
   Inquiry,
   InquiryCreateRequest,
@@ -154,6 +156,11 @@ export default function InquiryPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<InquiryFormData>(emptyForm);
+
+  const [ragOpenId, setRagOpenId] = useState<number | null>(null);
+  const [ragLoading, setRagLoading] = useState(false);
+  const [ragResult, setRagResult] = useState<SimilarCaseResult | null>(null);
+  const [ragError, setRagError] = useState<string | null>(null);
 
   useEffect(() => {
     inquiryApi.getStatusOptions().then(setStatusOptions).catch(() => {});
@@ -348,7 +355,14 @@ export default function InquiryPage() {
 
   const handleRowClick = (id: number) => {
     if (editingId && editingId !== id) return;
-    setExpandedId(expandedId === id ? null : id);
+    if (expandedId === id) {
+      setExpandedId(null);
+      setRagOpenId(null);
+      setRagResult(null);
+      setRagError(null);
+    } else {
+      setExpandedId(id);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -362,6 +376,28 @@ export default function InquiryPage() {
     e.stopPropagation();
     await inquiryApi.complete(id);
     await fetchInquiries();
+  };
+
+  const handleRagClick = async (inquiryId: number, e: MouseEvent) => {
+    e.stopPropagation();
+    if (ragOpenId === inquiryId) {
+      setRagOpenId(null);
+      setRagResult(null);
+      setRagError(null);
+      return;
+    }
+    setRagOpenId(inquiryId);
+    setRagResult(null);
+    setRagError(null);
+    setRagLoading(true);
+    try {
+      const result = await ragApi.getSimilarCases(inquiryId);
+      setRagResult(result);
+    } catch {
+      setRagError('유사 사례를 불러오는데 실패했습니다.');
+    } finally {
+      setRagLoading(false);
+    }
   };
 
   return (
@@ -700,12 +736,13 @@ export default function InquiryPage() {
             <th>위치</th>
             <th>처리</th>
             <th>등록일</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           {filteredInquiries.length === 0 ? (
             <tr>
-              <td colSpan={8} className="empty-message">
+              <td colSpan={9} className="empty-message">
                 조건에 맞는 민원이 없습니다.
               </td>
             </tr>
@@ -745,10 +782,25 @@ export default function InquiryPage() {
                     </td>
                     <td>{methodLabel}</td>
                     <td>{getRelativeTime(inquiry.createdAt)}</td>
+                    <td
+                      className="inquiry-rag-cell"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        className={`btn-rag${ragOpenId === inquiry.id ? ' active' : ''}`}
+                        onClick={(e: MouseEvent) => {
+                          if (!isExpanded) setExpandedId(inquiry.id);
+                          handleRagClick(inquiry.id, e);
+                        }}
+                        title="유사 사례 조회"
+                      >
+                        💡
+                      </button>
+                    </td>
                   </tr>
                   {isExpanded && (
                     <tr key={`${inquiry.id}-detail`} className="inquiry-detail-row">
-                      <td colSpan={8}>
+                      <td colSpan={9}>
                         {isEditing ? (
                           <div className="inquiry-edit-form">
                             <div className="edit-grid">
@@ -1015,6 +1067,32 @@ export default function InquiryPage() {
                                 삭제
                               </button>
                             </div>
+                            {ragOpenId === inquiry.id && (
+                              <div className="rag-bubble">
+                                <p className="rag-title">유사사례</p>
+                                {ragLoading ? (
+                                  <p className="rag-loading">유사사례를 조회하는 중입니다...</p>
+                                ) : ragError ? (
+                                  <p className="rag-error">{ragError}</p>
+                                ) : ragResult ? (
+                                  <>
+                                    <p className="rag-summary">{ragResult.summary}</p>
+                                    {ragResult.references.length > 0 && (
+                                      <>
+                                        <p className="rag-references-title">참고 사례 ({ragResult.referenceCount}건)</p>
+                                        {ragResult.references.map((ref) => (
+                                          <div key={ref.inquiryId} className="rag-reference-item">
+                                            <p className="rag-reference-meta">{ref.type} · {ref.location}</p>
+                                            <p className="rag-reference-problem"><strong>증상:</strong> {ref.problem}</p>
+                                            <p className="rag-reference-solution"><strong>해결:</strong> {ref.solution}</p>
+                                          </div>
+                                        ))}
+                                      </>
+                                    )}
+                                  </>
+                                ) : null}
+                              </div>
+                            )}
                             <div className="detail-content">
                               {inquiry.locations.length > 0 && (
                                 <div className="detail-row">

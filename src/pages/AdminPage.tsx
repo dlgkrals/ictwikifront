@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import { adminApi } from '../api/adminApi';
-import type { AdminUser, AdminUserStats, UserRole, RoleOption } from '../types';
+import type { AdminUser, AdminUserStats, UserRole, RoleOption, BatchEmbedResult } from '../types';
 
 type AdminTab = 'dashboard' | 'users' | 'pending';
 
@@ -37,6 +37,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [embedLoading, setEmbedLoading] = useState(false);
+  const [embedResult, setEmbedResult] = useState<BatchEmbedResult | null>(null);
 
   const [passwordModal, setPasswordModal] = useState<{ userId: number; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -75,6 +78,20 @@ export default function AdminPage() {
 
   const getRoleLabel = (code: UserRole) =>
     roles.find((r) => r.code === code)?.displayName ?? code;
+
+  const handleEmbedAll = async () => {
+    if (!confirm('전체 완료 민원을 임베딩합니다. 계속하시겠습니까?')) return;
+    setEmbedLoading(true);
+    setEmbedResult(null);
+    try {
+      const result = await adminApi.embedAll();
+      setEmbedResult(result);
+    } catch {
+      setMessage({ type: 'error', text: '배치 임베딩에 실패했습니다.' });
+    } finally {
+      setEmbedLoading(false);
+    }
+  };
 
   const handleApprove = async (userId: number) => {
     setActionLoading(userId);
@@ -205,6 +222,22 @@ export default function AdminPage() {
             </button>
           </div>
         )}
+        <div className="admin-rag-section">
+          <h3>RAG 임베딩</h3>
+          <p className="admin-rag-desc">기존에 임베딩된 자료를 전부 삭제하고 완료된 민원을 다시 임베딩합니다.</p>
+          <button
+            className="btn btn-primary"
+            onClick={handleEmbedAll}
+            disabled={embedLoading}
+          >
+            {embedLoading ? '임베딩 중...' : '재임베딩'}
+          </button>
+          {embedResult && (
+            <div className="admin-rag-result">
+              {embedResult.message}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
