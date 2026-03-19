@@ -29,8 +29,8 @@ export interface InquiryDashboardStats {
   methodCounts: InquiryStatsItem[];
   buildingCounts: InquiryStatsItem[];
   avgDailyCount: number;
+  avgWeeklyCount: number;
   avgMonthlyCount: number;
-  avgProcessingDays: number | null;
 }
 
 export const inquiryApi = {
@@ -141,26 +141,34 @@ export const inquiryApi = {
   },
 
   // 유형별 통계
-  getTypeStats: async (): Promise<InquiryStatsItem[]> => {
-    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-type');
+  getTypeStats: async (year?: number, month?: number, week?: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-type', {
+      params: { year, month, week },
+    });
     return response.data;
   },
 
   // 처리방식별 통계
-  getMethodStats: async (): Promise<InquiryStatsItem[]> => {
-    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-method');
+  getMethodStats: async (year?: number, month?: number, week?: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-method', {
+      params: { year, month, week },
+    });
     return response.data;
   },
 
   // 건물별 통계
-  getBuildingStats: async (): Promise<InquiryStatsItem[]> => {
-    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-building');
+  getBuildingStats: async (year?: number, month?: number, week?: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-building', {
+      params: { year, month, week },
+    });
     return response.data;
   },
 
   // 상태별 통계
-  getStatusStats: async (): Promise<InquiryStatsItem[]> => {
-    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-status');
+  getStatusStats: async (year?: number, month?: number, week?: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/by-status', {
+      params: { year, month, week },
+    });
     return response.data;
   },
 
@@ -168,6 +176,14 @@ export const inquiryApi = {
   getMonthlyStats: async (year: number): Promise<InquiryStatsItem[]> => {
     const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/monthly-in-year', {
       params: { year },
+    });
+    return response.data;
+  },
+
+  // 주별 통계 (특정 연도/월)
+  getWeeklyStatsInMonth: async (year: number, month: number): Promise<InquiryStatsItem[]> => {
+    const response = await apiClient.get<InquiryStatsItem[]>('/api/inquiries/stats/weekly-in-month', {
+      params: { year, month },
     });
     return response.data;
   },

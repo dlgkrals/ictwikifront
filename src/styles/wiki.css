@@ -2041,6 +2041,16 @@ body {
   transition: width 0.3s ease;
 }
 
+.line-chart-wrap {
+  overflow-x: auto;
+}
+
+.line-chart {
+  display: block;
+  width: 100%;
+  min-width: 400px;
+}
+
 /* Reset Password Page */
 .reset-password-page {
   min-height: 100vh;
