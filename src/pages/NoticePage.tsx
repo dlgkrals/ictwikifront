@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import { renderLinesSafe } from '../components/InlineFormatter';
@@ -20,6 +20,118 @@ function getRelativeTime(dateString: string): string {
   if (diffInMonths < 12) return `${diffInMonths}달 전`;
   const diffInYears = Math.floor(diffInMonths / 12);
   return `${diffInYears}년 전`;
+}
+
+const NOTICE_SYNTAX_ITEMS = [
+  { label: '제목 1', syntax: '# 제목', description: '큰 제목' },
+  { label: '제목 2', syntax: '## 제목', description: '중간 제목' },
+  { label: '제목 3', syntax: '### 제목', description: '작은 제목' },
+  { label: '목록', syntax: '- 항목', description: '순서 없는 목록' },
+  { label: '번호 목록', syntax: '1. 항목', description: '순서 있는 번호 목록' },
+  { label: '굵게', syntax: '**텍스트**', description: '텍스트를 굵게 표시' },
+  { label: '인라인 코드', syntax: '`코드`', description: '코드 텍스트' },
+  { label: 'URL', syntax: 'https://example.com', description: 'URL 자동 링크' },
+];
+
+interface NoticeEditorProps {
+  content: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}
+
+function NoticeEditor({ content, onChange, disabled }: NoticeEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const cursorPositionRef = useRef<number>(0);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+    cursorPositionRef.current = e.target.selectionStart;
+  };
+
+  const handleCursorMove = () => {
+    if (textareaRef.current) {
+      cursorPositionRef.current = textareaRef.current.selectionStart;
+    }
+  };
+
+  const insertSyntax = useCallback((syntax: string) => {
+    const pos = cursorPositionRef.current;
+    const newContent = content.slice(0, pos) + syntax + content.slice(pos);
+    onChange(newContent);
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const newPos = pos + syntax.length;
+        textareaRef.current.setSelectionRange(newPos, newPos);
+        cursorPositionRef.current = newPos;
+      }
+    });
+  }, [content, onChange]);
+
+  return (
+    <div className="document-editor">
+      <div className="editor-layout">
+        <div className="editor-panel">
+          <div className="editor-panel-header">편집기</div>
+          <textarea
+            ref={textareaRef}
+            className="form-textarea editor-textarea"
+            value={content}
+            onChange={handleChange}
+            onClick={handleCursorMove}
+            onKeyUp={handleCursorMove}
+            placeholder="공지사항 내용을 입력하세요..."
+            rows={20}
+            disabled={disabled}
+          />
+        </div>
+        <div className="editor-panel">
+          <div className="editor-panel-header">실시간 미리보기</div>
+          <div className="editor-preview">
+            {content.trim() ? (
+              <div className="notice-content">{renderLinesSafe(content)}</div>
+            ) : (
+              <p className="empty-preview">미리보기할 내용이 없습니다.</p>
+            )}
+          </div>
+        </div>
+        <div className="editor-panel">
+          <div className="syntax-helper">
+            <div className="syntax-helper-header">
+              <span className="syntax-helper-title">지원 문법</span>
+            </div>
+            <div className="syntax-helper-content">
+              <p className="syntax-helper-tip">항목을 클릭하면 편집기의 커서 위치에 문법이 삽입됩니다.</p>
+              <div className="syntax-category">
+                <div className="syntax-items">
+                  {NOTICE_SYNTAX_ITEMS.map((item) => (
+                    <div
+                      key={item.label}
+                      className="syntax-item"
+                      onClick={() => insertSyntax(item.syntax)}
+                    >
+                      <div className="syntax-item-header">
+                        <span className="syntax-label">{item.label}</span>
+                        <span className="syntax-description">{item.description}</span>
+                      </div>
+                      <div className="syntax-item-body">
+                        <div className="syntax-raw">
+                          <code>{item.syntax}</code>
+                        </div>
+                        <div className="syntax-rendered">
+                          {renderLinesSafe(item.syntax)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const emptyForm: NoticeFormData = {
@@ -77,12 +189,9 @@ function NoticeListPage() {
           </div>
           <div className="form-group">
             <label>내용 *</label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="form-textarea"
-              rows={10}
-              placeholder="공지사항 내용을 입력하세요 (마크다운 지원)"
+            <NoticeEditor
+              content={formData.content}
+              onChange={(value) => setFormData({ ...formData, content: value })}
               disabled={submitting}
             />
           </div>
@@ -229,12 +338,11 @@ function NoticeDetailPage({ id }: { id: number }) {
           </div>
           <div className="form-group">
             <label>내용</label>
-            <textarea
-              value={editData.content}
-              onChange={(e) => setEditData({ ...editData, content: e.target.value })}
-              className="form-textarea"
-              rows={15}
+            <NoticeEditor
+              content={editData.content}
+              onChange={(value) => setEditData({ ...editData, content: value })}
               disabled={saving}
+              rows={15}
             />
           </div>
           <div className="form-actions">

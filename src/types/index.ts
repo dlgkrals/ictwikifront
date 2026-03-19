@@ -91,6 +91,27 @@ export interface DocumentUpdateRequest {
   categoryCode: DocumentCategoryCode;
 }
 
+export interface DocumentHistory {
+  id: number;
+  documentId: number;
+  version: number;
+  title: string;
+  content: string;
+  editReason: string | null;
+  editorId: number;
+  editorName: string;
+  editorEmail: string;
+  editedAt: string;
+}
+
+export interface DocumentLink {
+  sourceDocumentId: number;
+  sourceDocumentTitle: string;
+  targetDocumentId: number;
+  targetDocumentTitle: string;
+  displayText: string;
+}
+
 // ===== Notice =====
 export interface Notice {
   id: number;

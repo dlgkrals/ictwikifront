@@ -109,6 +109,7 @@ export default function MyPage() {
   const [myDocuments, setMyDocuments] = useState<DocumentSummary[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
 
+
   // My inquiries state
   const [myInquiries, setMyInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
@@ -302,7 +303,6 @@ export default function MyPage() {
                   <tr>
                     <th>제목</th>
                     <th>카테고리</th>
-                    <th>조회수</th>
                     <th>작성일</th>
                   </tr>
                 </thead>
@@ -311,7 +311,6 @@ export default function MyPage() {
                     <tr key={doc.id} onClick={() => navigate(`/wiki/${doc.id}`)} className="clickable-row">
                       <td>{doc.title}</td>
                       <td>{doc.categoryName}</td>
-                      <td>{doc.viewCount}</td>
                       <td>{getRelativeTime(doc.createdAt)}</td>
                     </tr>
                   ))}

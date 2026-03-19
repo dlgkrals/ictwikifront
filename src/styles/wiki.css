@@ -2051,6 +2051,249 @@ body {
   min-width: 400px;
 }
 
+.documents-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 문서 복구 모달 */
+.trash-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.trash-modal {
+  background: var(--content-bg);
+  border-radius: 10px;
+  width: 560px;
+  max-width: 90vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.trash-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trash-modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trash-modal-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px 6px;
+}
+
+.trash-modal-close:hover {
+  color: var(--text-color);
+}
+
+.trash-modal-message {
+  padding: 8px 20px 0;
+  font-size: 13px;
+  color: var(--primary-color);
+}
+
+.trash-modal-empty {
+  padding: 24px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.trash-doc-list {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.trash-doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+}
+
+.trash-doc-item:last-child {
+  border-bottom: none;
+}
+
+.trash-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trash-doc-title {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trash-doc-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Wiki Info Panel (수정 이력 / 역참조 / 나가는 링크) */
+.wiki-info-panel {
+  margin-top: 40px;
+  border-top: 2px solid var(--border-color);
+}
+
+.wiki-info-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wiki-info-tab {
+  padding: 8px 18px;
+  font-size: 13px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  margin-bottom: -1px;
+}
+
+.wiki-info-tab:hover {
+  color: var(--text-color);
+}
+
+.wiki-info-tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  font-weight: 600;
+}
+
+.wiki-info-content {
+  padding: 16px 0;
+}
+
+.wiki-info-loading,
+.wiki-info-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* 수정 이력 테이블 */
+.wiki-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.wiki-history-table th,
+.wiki-history-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wiki-history-table th {
+  background: var(--bg-color);
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.history-version {
+  font-weight: 700;
+  color: var(--primary-color);
+  white-space: nowrap;
+}
+
+.history-reason {
+  color: var(--text-muted);
+}
+
+.history-date {
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.btn-history-toggle {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.btn-history-toggle:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.wiki-history-content-row td {
+  padding: 0;
+}
+
+.wiki-history-content {
+  padding: 16px;
+  background: var(--bg-color);
+  border-left: 3px solid var(--primary-color);
+  font-size: 13px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* 역참조 / 나가는 링크 목록 */
+.wiki-link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wiki-link-item {
+  font-size: 14px;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.wiki-link-item:hover {
+  text-decoration: underline;
+}
+
+.wiki-link-display {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 /* Reset Password Page */
 .reset-password-page {
   min-height: 100vh;
@@ -3339,3 +3582,4 @@ body {
   margin-top: 3px;
   line-height: 1.5;
 }
+

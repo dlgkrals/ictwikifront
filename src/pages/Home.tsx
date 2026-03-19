@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_METHOD } from '../context/WikiContext';
 import { inquiryApi } from '../api/inquiryApi';
+import { documentApi } from '../api/documentApi';
 import { ragApi } from '../api/ragApi';
-import type { SimilarCaseResult } from '../types';
+import type { SimilarCaseResult, DocumentSummary } from '../types';
 import type {
   Inquiry,
   InquiryCreateRequest,
@@ -170,6 +171,12 @@ export default function Home() {
   const [ragResult, setRagResult] = useState<SimilarCaseResult | null>(null);
   const [ragError, setRagError] = useState<string | null>(null);
 
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [deletedDocs, setDeletedDocs] = useState<DocumentSummary[]>([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [trashActionLoading, setTrashActionLoading] = useState<number | null>(null);
+  const [trashMessage, setTrashMessage] = useState<string | null>(null);
+
   useEffect(() => {
     inquiryApi.getStatusOptions().then(setStatusOptions).catch(() => {});
   }, []);
@@ -327,6 +334,34 @@ export default function Home() {
     await fetchInquiries();
   };
 
+  const handleOpenTrash = async () => {
+    setTrashOpen(true);
+    setTrashMessage(null);
+    setTrashLoading(true);
+    try {
+      const data = await documentApi.getDeletedDocuments();
+      setDeletedDocs(data);
+    } catch {
+      setTrashMessage('삭제된 문서 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setTrashLoading(false);
+    }
+  };
+
+  const handleRestore = async (docId: number) => {
+    setTrashActionLoading(docId);
+    try {
+      await documentApi.restore(docId);
+      setTrashMessage('문서가 복구되었습니다.');
+      const data = await documentApi.getDeletedDocuments();
+      setDeletedDocs(data);
+    } catch {
+      setTrashMessage('문서 복구에 실패했습니다.');
+    } finally {
+      setTrashActionLoading(null);
+    }
+  };
+
   const handleRagClick = async (inquiryId: number, e: MouseEvent) => {
     e.stopPropagation();
     if (ragOpenId === inquiryId) {
@@ -351,6 +386,42 @@ export default function Home() {
 
   return (
     <div className="page home-page">
+      {trashOpen && (
+        <div className="trash-modal-overlay" onClick={() => setTrashOpen(false)}>
+          <div className="trash-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="trash-modal-header">
+              <h3>삭제된 문서</h3>
+              <button className="trash-modal-close" onClick={() => setTrashOpen(false)}>✕</button>
+            </div>
+            {trashMessage && (
+              <p className="trash-modal-message">{trashMessage}</p>
+            )}
+            {trashLoading ? (
+              <p className="trash-modal-empty">불러오는 중...</p>
+            ) : deletedDocs.length === 0 ? (
+              <p className="trash-modal-empty">삭제된 문서가 없습니다.</p>
+            ) : (
+              <ul className="trash-doc-list">
+                {deletedDocs.map((doc) => (
+                  <li key={doc.id} className="trash-doc-item">
+                    <div className="trash-doc-info">
+                      <span className="trash-doc-title">{doc.title}</span>
+                      <span className="trash-doc-meta">{doc.categoryName} · {doc.authorName}</span>
+                    </div>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => handleRestore(doc.id)}
+                      disabled={trashActionLoading === doc.id}
+                    >
+                      {trashActionLoading === doc.id ? '복구 중...' : '복구'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
       <h1 className="page-title">ICT Wiki</h1>
 
       <div className="home-grid">
@@ -780,7 +851,10 @@ export default function Home() {
           <div className="documents-section">
             <div className="documents-header">
               <h2>문서 목록</h2>
-              <Link to="/create" className="btn btn-secondary">새 문서</Link>
+              <div className="documents-header-actions">
+                <a className="btn btn-secondary" onClick={handleOpenTrash} role="button" style={{ cursor: 'pointer' }}>문서 복구</a>
+                <Link to="/create" className="btn btn-secondary">새 문서</Link>
+              </div>
             </div>
             <div className="document-category-filters">
               <button className={`category-filter-btn ${selectedCategory === null ? 'active' : ''}`} onClick={() => setSelectedCategory(null)}>전체</button>

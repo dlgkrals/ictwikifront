@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
+import { documentApi } from '../api';
 import NamuMarkRenderer, { type ExtractedHeading } from '../components/namumark/NamuMarkRenderer';
-import type { Document, TocItem, Section } from '../types';
+import type { Document, TocItem, Section, DocumentHistory, DocumentLink } from '../types';
 import { DOCUMENT_CATEGORY_MAP } from '../types';
+
+type InfoTab = 'history' | 'backlinks' | 'outlinks';
 
 export default function WikiPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +19,13 @@ export default function WikiPage() {
   const [editContent, setEditContent] = useState('');
   const [tableOfContents, setTableOfContents] = useState<TocItem[]>([]);
 
+  const [infoTab, setInfoTab] = useState<InfoTab | null>(null);
+  const [infoLoading, setInfoLoading] = useState(false);
+  const [historyList, setHistoryList] = useState<DocumentHistory[]>([]);
+  const [backlinkList, setBacklinkList] = useState<DocumentLink[]>([]);
+  const [outlinkList, setOutlinkList] = useState<DocumentLink[]>([]);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchDocument = async () => {
       if (!id) {
@@ -23,12 +33,43 @@ export default function WikiPage() {
         return;
       }
       setLoading(true);
+      setInfoTab(null);
+      setHistoryList([]);
+      setBacklinkList([]);
+      setOutlinkList([]);
+      setExpandedHistoryId(null);
       const doc = await getDocument(parseInt(id, 10));
       setDocument(doc);
       setLoading(false);
     };
     fetchDocument();
   }, [id, getDocument]);
+
+  const handleInfoTab = async (tab: InfoTab) => {
+    if (!document) return;
+    if (infoTab === tab) {
+      setInfoTab(null);
+      return;
+    }
+    setInfoTab(tab);
+    setInfoLoading(true);
+    try {
+      if (tab === 'history') {
+        const data = await documentApi.getHistories(document.id);
+        setHistoryList(data);
+      } else if (tab === 'backlinks') {
+        const data = await documentApi.getBacklinks(document.id);
+        setBacklinkList(data);
+      } else if (tab === 'outlinks') {
+        const data = await documentApi.getOutlinks(document.id);
+        setOutlinkList(data);
+      }
+    } catch {
+      // 에러 시 빈 목록 유지
+    } finally {
+      setInfoLoading(false);
+    }
+  };
 
   const handleHeadingsExtracted = useCallback((headings: ExtractedHeading[]) => {
     setTableOfContents(headings.map((h) => ({
@@ -262,6 +303,115 @@ export default function WikiPage() {
               ))}
             </div>
           </>
+        )}
+      </div>
+
+      <div className="wiki-info-panel">
+        <div className="wiki-info-tabs">
+          {(['history', 'backlinks', 'outlinks'] as InfoTab[]).map((tab) => (
+            <button
+              key={tab}
+              className={`wiki-info-tab ${infoTab === tab ? 'active' : ''}`}
+              onClick={() => handleInfoTab(tab)}
+            >
+              {tab === 'history' && '수정 이력'}
+              {tab === 'backlinks' && '역참조'}
+              {tab === 'outlinks' && '나가는 링크'}
+            </button>
+          ))}
+        </div>
+
+        {infoTab && (
+          <div className="wiki-info-content">
+            {infoLoading && <p className="wiki-info-loading">불러오는 중...</p>}
+
+            {!infoLoading && infoTab === 'history' && (
+              historyList.length === 0 ? (
+                <p className="wiki-info-empty">수정 이력이 없습니다.</p>
+              ) : (
+                <table className="wiki-history-table">
+                  <thead>
+                    <tr>
+                      <th>버전</th>
+                      <th>수정자</th>
+                      <th>수정 사유</th>
+                      <th>수정일</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyList.map((h) => (
+                      <>
+                        <tr key={h.id} className="wiki-history-row">
+                          <td className="history-version">v{h.version}</td>
+                          <td>{h.editorName}</td>
+                          <td className="history-reason">{h.editReason || '-'}</td>
+                          <td className="history-date">
+                            {new Date(h.editedAt).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </td>
+                          <td>
+                            <button
+                              className="btn-history-toggle"
+                              onClick={() => setExpandedHistoryId(expandedHistoryId === h.id ? null : h.id)}
+                            >
+                              {expandedHistoryId === h.id ? '접기' : '내용 보기'}
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedHistoryId === h.id && (
+                          <tr key={`${h.id}-content`} className="wiki-history-content-row">
+                            <td colSpan={5}>
+                              <div className="wiki-history-content">
+                                <NamuMarkRenderer content={h.content} />
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            )}
+
+            {!infoLoading && infoTab === 'backlinks' && (
+              backlinkList.length === 0 ? (
+                <p className="wiki-info-empty">이 문서를 참조하는 문서가 없습니다.</p>
+              ) : (
+                <ul className="wiki-link-list">
+                  {backlinkList.map((link, i) => (
+                    <li key={i}>
+                      <Link to={`/wiki/${link.sourceDocumentId}`} className="wiki-link-item">
+                        {link.sourceDocumentTitle}
+                      </Link>
+                      {link.displayText && link.displayText !== link.sourceDocumentTitle && (
+                        <span className="wiki-link-display"> — "{link.displayText}"</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+
+            {!infoLoading && infoTab === 'outlinks' && (
+              outlinkList.length === 0 ? (
+                <p className="wiki-info-empty">이 문서에서 나가는 링크가 없습니다.</p>
+              ) : (
+                <ul className="wiki-link-list">
+                  {outlinkList.map((link, i) => (
+                    <li key={i}>
+                      <Link to={`/wiki/${link.targetDocumentId}`} className="wiki-link-item">
+                        {link.targetDocumentTitle}
+                      </Link>
+                      {link.displayText && link.displayText !== link.targetDocumentTitle && (
+                        <span className="wiki-link-display"> — "{link.displayText}"</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+          </div>
         )}
       </div>
     </div>

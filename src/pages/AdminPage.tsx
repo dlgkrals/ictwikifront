@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import { adminApi } from '../api/adminApi';
-import type { AdminUser, AdminUserStats, UserRole, RoleOption, BatchEmbedResult } from '../types';
+import { documentApi } from '../api/documentApi';
+import type { AdminUser, AdminUserStats, UserRole, RoleOption, BatchEmbedResult, DocumentSummary } from '../types';
 
-type AdminTab = 'dashboard' | 'users' | 'pending';
+type AdminTab = 'dashboard' | 'users' | 'pending' | 'trash';
 
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
@@ -41,6 +42,10 @@ export default function AdminPage() {
   const [embedLoading, setEmbedLoading] = useState(false);
   const [embedResult, setEmbedResult] = useState<BatchEmbedResult | null>(null);
 
+  const [deletedDocs, setDeletedDocs] = useState<DocumentSummary[]>([]);
+  const [deletedLoading, setDeletedLoading] = useState(false);
+  const [docActionLoading, setDocActionLoading] = useState<number | null>(null);
+
   const [passwordModal, setPasswordModal] = useState<{ userId: number; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [roleModal, setRoleModal] = useState<{ userId: number; name: string; currentRole: UserRole } | null>(null);
@@ -57,8 +62,51 @@ export default function AdminPage() {
 
   useEffect(() => {
     setMessage(null);
-    fetchAllUsers();
+    if (activeTab === 'trash') {
+      fetchDeletedDocs();
+    } else {
+      fetchAllUsers();
+    }
   }, [activeTab]);
+
+  const fetchDeletedDocs = async () => {
+    setDeletedLoading(true);
+    try {
+      const data = await documentApi.getDeletedDocuments();
+      setDeletedDocs(data);
+    } catch {
+      setMessage({ type: 'error', text: '삭제된 문서 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      setDeletedLoading(false);
+    }
+  };
+
+  const handleRestore = async (docId: number) => {
+    setDocActionLoading(docId);
+    try {
+      await documentApi.restore(docId);
+      setMessage({ type: 'success', text: '문서가 복구되었습니다.' });
+      await fetchDeletedDocs();
+    } catch {
+      setMessage({ type: 'error', text: '문서 복구에 실패했습니다.' });
+    } finally {
+      setDocActionLoading(null);
+    }
+  };
+
+  const handlePermanentDelete = async (docId: number, title: string) => {
+    if (!confirm(`"${title}" 문서를 영구 삭제합니다. 이 작업은 되돌릴 수 없습니다.`)) return;
+    setDocActionLoading(docId);
+    try {
+      await documentApi.permanentDelete(docId);
+      setMessage({ type: 'success', text: '문서가 영구 삭제되었습니다.' });
+      await fetchDeletedDocs();
+    } catch {
+      setMessage({ type: 'error', text: '영구 삭제에 실패했습니다.' });
+    } finally {
+      setDocActionLoading(null);
+    }
+  };
 
   useEffect(() => {
     adminApi.getRoles().then(setRoles).catch(() => {});
@@ -184,6 +232,7 @@ export default function AdminPage() {
     { key: 'dashboard', label: '대시보드', path: '/admin/dashboard' },
     { key: 'users', label: '전체 회원', path: '/admin/users' },
     { key: 'pending', label: '승인 대기', path: '/admin/pending' },
+    { key: 'trash', label: '삭제된 문서', path: '/admin/trash' },
   ];
 
   const renderDashboard = () => {
@@ -372,6 +421,59 @@ export default function AdminPage() {
           <div className="my-section">
             <h2>승인 대기 회원</h2>
             {renderUserTable(pendingUsers, true)}
+          </div>
+        );
+      case 'trash':
+        return (
+          <div className="my-section">
+            <h2>삭제된 문서</h2>
+            {deletedLoading ? (
+              <p>로딩 중...</p>
+            ) : deletedDocs.length === 0 ? (
+              <p className="empty-message">삭제된 문서가 없습니다.</p>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>제목</th>
+                    <th>카테고리</th>
+                    <th>작성자</th>
+                    <th>삭제일</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deletedDocs.map((doc) => (
+                    <tr key={doc.id}>
+                      <td>{doc.title}</td>
+                      <td>{doc.categoryName}</td>
+                      <td>{doc.authorName}</td>
+                      <td>{formatDateTime(doc.updatedAt)}</td>
+                      <td>
+                        <div className="admin-action-buttons">
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={() => handleRestore(doc.id)}
+                            disabled={docActionLoading === doc.id}
+                          >
+                            복구
+                          </button>
+                          {(currentUser?.role === 'ADMIN' || currentUser?.role === 'TA') && (
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handlePermanentDelete(doc.id, doc.title)}
+                              disabled={docActionLoading === doc.id}
+                            >
+                              영구 삭제
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         );
       default:
