@@ -156,6 +156,7 @@ export default function Home() {
     notices, inquiries, documents,
     addInquiry, updateInquiry, deleteInquiry, fetchInquiries,
     staffUsers, fetchStaffUsers,
+    fetchDocuments,
   } = useWiki();
 
   const [statusOptions, setStatusOptions] = useState<InquiryStatusOption[]>([]);
@@ -176,6 +177,7 @@ export default function Home() {
   const [trashLoading, setTrashLoading] = useState(false);
   const [trashActionLoading, setTrashActionLoading] = useState<number | null>(null);
   const [trashMessage, setTrashMessage] = useState<string | null>(null);
+  const [restoreConflictId, setRestoreConflictId] = useState<number | null>(null);
 
   useEffect(() => {
     inquiryApi.getStatusOptions().then(setStatusOptions).catch(() => {});
@@ -348,15 +350,23 @@ export default function Home() {
     }
   };
 
-  const handleRestore = async (docId: number) => {
+  const handleRestore = async (docId: number, force = false) => {
     setTrashActionLoading(docId);
     try {
-      await documentApi.restore(docId);
+      await documentApi.restore(docId, force);
       setTrashMessage('문서가 복구되었습니다.');
-      const data = await documentApi.getDeletedDocuments();
+      const [data] = await Promise.all([
+        documentApi.getDeletedDocuments(),
+        fetchDocuments(),
+      ]);
       setDeletedDocs(data);
-    } catch {
-      setTrashMessage('문서 복구에 실패했습니다.');
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        setRestoreConflictId(docId);
+      } else {
+        setTrashMessage('문서 복구에 실패했습니다.');
+      }
     } finally {
       setTrashActionLoading(null);
     }
@@ -386,6 +396,33 @@ export default function Home() {
 
   return (
     <div className="page home-page">
+      {restoreConflictId !== null && (
+        <div className="admin-modal-overlay" onClick={() => setRestoreConflictId(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>제목 충돌</h3>
+            <p className="admin-modal-desc">
+              같은 제목의 문서가 이미 존재합니다.<br />
+              기존 문서를 삭제하고 복구하시겠습니까?
+            </p>
+            <div className="admin-modal-actions">
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  const id = restoreConflictId;
+                  setRestoreConflictId(null);
+                  handleRestore(id, true);
+                }}
+              >
+                덮어쓰기
+              </button>
+              <button className="btn btn-secondary" onClick={() => setRestoreConflictId(null)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {trashOpen && (
         <div className="trash-modal-overlay" onClick={() => setTrashOpen(false)}>
           <div className="trash-modal" onClick={(e) => e.stopPropagation()}>

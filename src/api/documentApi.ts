@@ -62,8 +62,8 @@ export const documentApi = {
   },
 
   // 문서 복구
-  restore: async (id: number): Promise<void> => {
-    await apiClient.post(`/api/documents/${id}/restore`);
+  restore: async (id: number, force = false): Promise<void> => {
+    await apiClient.post(`/api/documents/${id}/restore`, null, { params: { force } });
   },
 
   // 문서 영구 삭제 (ADMIN/TA 전용)

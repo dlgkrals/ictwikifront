@@ -29,7 +29,7 @@ function calcStats(users: AdminUser[]): AdminUserStats {
 export default function AdminPage() {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const { currentUser } = useWiki();
+  const { currentUser, fetchDocuments } = useWiki();
 
   const activeTab: AdminTab = (tab as AdminTab) || 'dashboard';
 
@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [deletedDocs, setDeletedDocs] = useState<DocumentSummary[]>([]);
   const [deletedLoading, setDeletedLoading] = useState(false);
   const [docActionLoading, setDocActionLoading] = useState<number | null>(null);
+  const [restoreConflictId, setRestoreConflictId] = useState<number | null>(null);
 
   const [passwordModal, setPasswordModal] = useState<{ userId: number; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -81,14 +82,19 @@ export default function AdminPage() {
     }
   };
 
-  const handleRestore = async (docId: number) => {
+  const handleRestore = async (docId: number, force = false) => {
     setDocActionLoading(docId);
     try {
-      await documentApi.restore(docId);
+      await documentApi.restore(docId, force);
       setMessage({ type: 'success', text: '문서가 복구되었습니다.' });
-      await fetchDeletedDocs();
-    } catch {
-      setMessage({ type: 'error', text: '문서 복구에 실패했습니다.' });
+      await Promise.all([fetchDeletedDocs(), fetchDocuments()]);
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 409) {
+        setRestoreConflictId(docId);
+      } else {
+        setMessage({ type: 'error', text: '문서 복구에 실패했습니다.' });
+      }
     } finally {
       setDocActionLoading(null);
     }
@@ -509,6 +515,34 @@ export default function AdminPage() {
                 변경
               </button>
               <button className="btn btn-secondary" onClick={() => setPasswordModal(null)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 문서 복구 충돌 모달 */}
+      {restoreConflictId !== null && (
+        <div className="admin-modal-overlay" onClick={() => setRestoreConflictId(null)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>제목 충돌</h3>
+            <p className="admin-modal-desc">
+              같은 제목의 문서가 이미 존재합니다.<br />
+              기존 문서를 삭제하고 복구하시겠습니까?
+            </p>
+            <div className="admin-modal-actions">
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  const id = restoreConflictId;
+                  setRestoreConflictId(null);
+                  handleRestore(id, true);
+                }}
+              >
+                덮어쓰기
+              </button>
+              <button className="btn btn-secondary" onClick={() => setRestoreConflictId(null)}>
                 취소
               </button>
             </div>
