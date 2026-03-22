@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type FormEvent } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import { renderLinesSafe } from '../components/InlineFormatter';
+import { fileApi } from '../api/fileApi';
 import type { Notice, NoticeFormData } from '../types';
 
 function getRelativeTime(dateString: string): string {
@@ -42,6 +43,9 @@ interface NoticeEditorProps {
 function NoticeEditor({ content, onChange, disabled }: NoticeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cursorPositionRef = useRef<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
@@ -68,22 +72,84 @@ function NoticeEditor({ content, onChange, disabled }: NoticeEditorProps) {
     });
   }, [content, onChange]);
 
+  const uploadAndInsert = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    try {
+      const url = await fileApi.upload(file);
+      insertSyntax(`![이미지](${url})`);
+    } catch {
+      alert('이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  }, [insertSyntax]);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadAndInsert(file);
+    e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadAndInsert(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const file = Array.from(e.clipboardData.items)
+      .find((item) => item.type.startsWith('image/'))
+      ?.getAsFile();
+    if (file) {
+      e.preventDefault();
+      uploadAndInsert(file);
+    }
+  };
+
   return (
     <div className="document-editor">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        style={{ display: 'none' }}
+        onChange={handleFileInput}
+      />
       <div className="editor-layout">
         <div className="editor-panel">
-          <div className="editor-panel-header">편집기</div>
-          <textarea
-            ref={textareaRef}
-            className="form-textarea editor-textarea"
-            value={content}
-            onChange={handleChange}
-            onClick={handleCursorMove}
-            onKeyUp={handleCursorMove}
-            placeholder="공지사항 내용을 입력하세요..."
-            rows={20}
-            disabled={disabled}
-          />
+          <div className="editor-panel-header">
+            편집기
+            <button
+              type="button"
+              className="editor-image-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || uploading}
+              title="이미지 업로드"
+            >
+              {uploading ? '업로드 중...' : '🖼 이미지'}
+            </button>
+          </div>
+          <div
+            className={`editor-drop-zone${dragOver ? ' drag-over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+          >
+            <textarea
+              ref={textareaRef}
+              className="form-textarea editor-textarea"
+              value={content}
+              onChange={handleChange}
+              onClick={handleCursorMove}
+              onKeyUp={handleCursorMove}
+              onPaste={handlePaste}
+              placeholder="공지사항 내용을 입력하세요..."
+              rows={20}
+              disabled={disabled || uploading}
+            />
+          </div>
         </div>
         <div className="editor-panel">
           <div className="editor-panel-header">실시간 미리보기</div>

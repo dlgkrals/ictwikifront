@@ -1671,6 +1671,66 @@ body {
   color: var(--text-muted);
   background-color: var(--sidebar-bg);
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editor-image-btn {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.editor-image-btn:hover:not(:disabled) {
+  background-color: #e8f0fe;
+  border-color: var(--primary-color);
+}
+
+.editor-image-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editor-drop-zone {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-drop-zone.drag-over::after {
+  content: '이미지를 여기에 드롭하세요';
+  position: absolute;
+  inset: 0;
+  background: rgba(51, 102, 204, 0.08);
+  border: 2px dashed var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--primary-color);
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.namu-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+}
+
+.notice-inline-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
 }
 
 .editor-textarea {

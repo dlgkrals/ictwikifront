@@ -183,5 +183,15 @@ export function renderInline(node: InlineNode, key: number, ctx: RenderContext):
 
     case 'line-break':
       return <br key={key} />;
+
+    case 'image':
+      return (
+        <img
+          key={key}
+          src={node.url}
+          alt={node.alt}
+          className="namu-image"
+        />
+      );
   }
 }

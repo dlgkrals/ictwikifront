@@ -3,7 +3,7 @@ import { LinkItUrl } from 'react-linkify-it';
 
 export function formatInlineText(text: string): ReactNode[] {
   const result: ReactNode[] = [];
-  const regex = /(\*\*(.*?)\*\*|`([^`]+)`)/g;
+  const regex = /(\*\*(.*?)\*\*|`([^`]+)`|!\[([^\]]*)\]\(([^)]+)\))/g;
   let lastIndex = 0;
   let match;
   let key = 0;
@@ -16,6 +16,8 @@ export function formatInlineText(text: string): ReactNode[] {
       result.push(<strong key={key++}><LinkItUrl>{match[2]}</LinkItUrl></strong>);
     } else if (match[3] !== undefined) {
       result.push(<code key={key++}>{match[3]}</code>);
+    } else if (match[5] !== undefined) {
+      result.push(<img key={key++} src={match[5]} alt={match[4] || ''} className="notice-inline-image" />);
     }
     lastIndex = match.index + match[0].length;
   }

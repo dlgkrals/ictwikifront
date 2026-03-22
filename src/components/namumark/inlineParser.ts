@@ -250,6 +250,16 @@ function parseWikiLink(text: string, start: number): ParseResult | null {
     display = content;
   }
 
+  // Image: [[파일:URL]] or [[파일:URL|alt]]
+  if (target.startsWith('파일:')) {
+    const url = target.slice(3);
+    const alt = pipeIndex !== -1 ? display : '';
+    return {
+      node: { type: 'image', url, alt },
+      end,
+    };
+  }
+
   // External link
   if (target.startsWith('http://') || target.startsWith('https://')) {
     return {

@@ -156,6 +156,12 @@ export interface LineBreakNode {
   type: 'line-break';
 }
 
+export interface ImageNode {
+  type: 'image';
+  url: string;
+  alt: string;
+}
+
 export type InlineNode =
   | TextNode
   | BoldNode
@@ -171,7 +177,8 @@ export type InlineNode =
   | AnchorLinkNode
   | FootnoteNode
   | InlineCodeNode
-  | LineBreakNode;
+  | LineBreakNode
+  | ImageNode;
 
 // ===== Footnote Reference =====
 
