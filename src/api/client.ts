@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-// const API_BASE_URL = 'https://api.ictwiki.site';
-
-export const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://api.ictwiki.site';
 
 // 메모리 내 CSRF 토큰 관리 (크로스 오리진에서 쿠키 접근 불가 → 응답 바디로 수신)
 let csrfToken: string | null = null;
