@@ -78,8 +78,8 @@ function NoticeEditor({ content, onChange, disabled }: NoticeEditorProps) {
     try {
       const url = await fileApi.upload(file);
       insertSyntax(`![이미지](${url})`);
-    } catch {
-      alert('이미지 업로드에 실패했습니다.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
     } finally {
       setUploading(false);
     }
@@ -113,7 +113,7 @@ function NoticeEditor({ content, onChange, disabled }: NoticeEditorProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
+        accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         style={{ display: 'none' }}
         onChange={handleFileInput}
       />

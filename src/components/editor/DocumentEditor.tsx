@@ -50,8 +50,8 @@ export default function DocumentEditor({ content, onChange, disabled }: Document
     try {
       const url = await fileApi.upload(file);
       insertSyntax(`[[파일:${url}]]`);
-    } catch {
-      alert('이미지 업로드에 실패했습니다.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
     } finally {
       setUploading(false);
     }
@@ -85,7 +85,7 @@ export default function DocumentEditor({ content, onChange, disabled }: Document
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
+        accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
         style={{ display: 'none' }}
         onChange={handleFileInput}
       />

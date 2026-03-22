@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "axios": "^1.13.4",
+    "heic2any": "^0.0.4",
+    "libheif-js": "^1.19.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-linkify-it": "^2.0.0",
