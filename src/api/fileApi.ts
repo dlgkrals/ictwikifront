@@ -1,6 +1,6 @@
 import apiClient, { API_BASE_URL } from './client';
 
-const MAX_WIDTH = 1920;
+const MAX_LONG_SIDE = 1920;
 
 function isHeic(file: File): boolean {
   return (
@@ -39,8 +39,9 @@ async function convertHeic(file: File): Promise<File> {
   const srcWidth: number = image.get_width();
   const srcHeight: number = image.get_height();
 
-  // 리사이징 계산
-  const scale = srcWidth > MAX_WIDTH ? MAX_WIDTH / srcWidth : 1;
+  // 리사이징 계산 (긴 쪽 기준)
+  const longerSide = Math.max(srcWidth, srcHeight);
+  const scale = longerSide > MAX_LONG_SIDE ? MAX_LONG_SIDE / longerSide : 1;
   const dstWidth = Math.round(srcWidth * scale);
   const dstHeight = Math.round(srcHeight * scale);
 
@@ -70,7 +71,7 @@ async function convertHeic(file: File): Promise<File> {
   return canvasToFile(dstCanvas, newName, 'image/jpeg');
 }
 
-/** 일반 이미지 리사이징 (가로 1920 초과 시) */
+/** 일반 이미지 리사이징 (긴 쪽 1920 초과 시) */
 function resizeIfNeeded(file: File): Promise<File> {
   return new Promise((resolve) => {
     if (file.type === 'image/gif') { resolve(file); return; }
@@ -80,11 +81,12 @@ function resizeIfNeeded(file: File): Promise<File> {
 
     img.onload = () => {
       URL.revokeObjectURL(url);
-      if (img.width <= MAX_WIDTH) { resolve(file); return; }
+      const longerSide = Math.max(img.width, img.height);
+      if (longerSide <= MAX_LONG_SIDE) { resolve(file); return; }
 
-      const ratio = MAX_WIDTH / img.width;
+      const ratio = MAX_LONG_SIDE / longerSide;
       const canvas = document.createElement('canvas');
-      canvas.width = MAX_WIDTH;
+      canvas.width = Math.round(img.width * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
 
