@@ -4,6 +4,7 @@ import { useWiki } from '../context/WikiContext';
 import { authApi, documentApi, inquiryApi, reportApi } from '../api';
 import type { DocumentSummary, Inquiry, LocationResponse } from '../types';
 import { INQUIRY_STATUS_MAP, INQUIRY_TYPE_MAP, INQUIRY_METHOD_MAP } from '../types';
+import '../styles/mypagestyle.css';
 
 type MyPageTab = 'info' | 'password' | 'documents' | 'inquiries';
 
@@ -90,6 +91,39 @@ function formatLocationGroups(locations: LocationResponse[]): string[] {
   });
 }
 
+/* ── Nav Icons ── */
+const IconInfo = () => (
+  <svg className="mp-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconLock = () => (
+  <svg className="mp-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const IconFile = () => (
+  <svg className="mp-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
+const IconClipboard = () => (
+  <svg className="mp-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    <line x1="9" y1="12" x2="15" y2="12" />
+    <line x1="9" y1="16" x2="13" y2="16" />
+  </svg>
+);
+
 export default function MyPage() {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
@@ -97,7 +131,6 @@ export default function MyPage() {
 
   const activeTab: MyPageTab = (tab as MyPageTab) || 'info';
 
-  // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -105,12 +138,9 @@ export default function MyPage() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // My documents state
   const [myDocuments, setMyDocuments] = useState<DocumentSummary[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
 
-
-  // My inquiries state
   const [myInquiries, setMyInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
   const [reportDownloading, setReportDownloading] = useState(false);
@@ -182,12 +212,10 @@ export default function MyPage() {
       setPasswordError('모든 필드를 입력해주세요.');
       return;
     }
-
     if (newPassword.length < 8) {
       setPasswordError('새 비밀번호는 8자 이상이어야 합니다.');
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setPasswordError('새 비밀번호가 일치하지 않습니다.');
       return;
@@ -213,31 +241,34 @@ export default function MyPage() {
   };
 
   const menuItems = [
-    { key: 'info', label: '개인정보 조회', path: '/my/info' },
-    { key: 'password', label: '비밀번호 변경', path: '/my/password' },
-    { key: 'documents', label: '내가 쓴 문서', path: '/my/documents' },
-    { key: 'inquiries', label: '내가 처리한 민원', path: '/my/inquiries' },
+    { key: 'info',      label: '개인정보 조회',   path: '/my/info',      icon: <IconInfo /> },
+    { key: 'password',  label: '비밀번호 변경',   path: '/my/password',  icon: <IconLock /> },
+    { key: 'documents', label: '내가 쓴 문서',    path: '/my/documents', icon: <IconFile /> },
+    { key: 'inquiries', label: '내가 처리한 민원', path: '/my/inquiries', icon: <IconClipboard /> },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'info':
         return (
-          <div className="my-section">
-            <h2>개인정보</h2>
-            <div className="info-card">
-              <div className="info-row">
-                <span className="info-label">이름</span>
-                <span className="info-value">{currentUser?.name}</span>
+          <div>
+            <h2 className="mp-section-title">개인정보</h2>
+            <p className="mp-section-desc">등록된 계정 정보입니다</p>
+            <div className="mp-info-card">
+              <div className="mp-info-row">
+                <span className="mp-info-label">이름</span>
+                <span className="mp-info-value">{currentUser?.name}</span>
               </div>
-              <div className="info-row">
-                <span className="info-label">이메일</span>
-                <span className="info-value">{currentUser?.email}</span>
+              <div className="mp-info-row">
+                <span className="mp-info-label">이메일</span>
+                <span className="mp-info-value">{currentUser?.email}</span>
               </div>
-              <div className="info-row">
-                <span className="info-label">역할</span>
-                <span className="info-value">
-                  {currentUser?.role ? getRoleLabel(currentUser.role) : ''}
+              <div className="mp-info-row">
+                <span className="mp-info-label">역할</span>
+                <span className="mp-info-value">
+                  <span className="mp-role-badge">
+                    {currentUser?.role ? getRoleLabel(currentUser.role) : ''}
+                  </span>
                 </span>
               </div>
             </div>
@@ -246,198 +277,211 @@ export default function MyPage() {
 
       case 'password':
         return (
-          <div className="my-section">
-            <h2>비밀번호 변경</h2>
-            <form className="password-form" onSubmit={handlePasswordChange}>
-              {passwordError && <div className="form-error">{passwordError}</div>}
-              {passwordSuccess && <div className="form-success">{passwordSuccess}</div>}
-              <div className="form-group">
-                <label>현재 비밀번호</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={handlePasswordInput(setCurrentPassword)}
-                  className="form-input"
-                  disabled={isChangingPassword}
-                />
-              </div>
-              <div className="form-group">
-                <label>새 비밀번호</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={handlePasswordInput(setNewPassword)}
-                  className="form-input"
-                  placeholder="대소문자, 숫자, 특수문자 포함 8자 이상"
-                  disabled={isChangingPassword}
-                />
-              </div>
-              <div className="form-group">
-                <label>새 비밀번호 확인</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={handlePasswordInput(setConfirmPassword)}
-                  className="form-input"
-                  disabled={isChangingPassword}
-                />
-              </div>
-              <button type="submit" className="btn btn-primary" disabled={isChangingPassword}>
-                {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
-              </button>
-            </form>
+          <div>
+            <h2 className="mp-section-title">비밀번호 변경</h2>
+            <p className="mp-section-desc">현재 비밀번호를 확인 후 변경할 수 있습니다</p>
+            <div className="mp-form-card">
+              <form onSubmit={handlePasswordChange}>
+                {passwordError && <div className="mp-message mp-message-error">{passwordError}</div>}
+                {passwordSuccess && <div className="mp-message mp-message-success">{passwordSuccess}</div>}
+                <div className="mp-field">
+                  <label className="mp-label">현재 비밀번호</label>
+                  <input
+                    type="password"
+                    className="mp-input"
+                    value={currentPassword}
+                    onChange={handlePasswordInput(setCurrentPassword)}
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <div className="mp-field">
+                  <label className="mp-label">새 비밀번호</label>
+                  <input
+                    type="password"
+                    className="mp-input"
+                    value={newPassword}
+                    onChange={handlePasswordInput(setNewPassword)}
+                    placeholder="대소문자, 숫자, 특수문자 포함 8자 이상"
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <div className="mp-field">
+                  <label className="mp-label">새 비밀번호 확인</label>
+                  <input
+                    type="password"
+                    className="mp-input"
+                    value={confirmPassword}
+                    onChange={handlePasswordInput(setConfirmPassword)}
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <button type="submit" className="mp-submit-btn" disabled={isChangingPassword}>
+                  {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
+                </button>
+              </form>
+            </div>
           </div>
         );
 
       case 'documents':
         return (
-          <div className="my-section">
-            <h2>내가 쓴 문서</h2>
+          <div>
+            <h2 className="mp-section-title">내가 쓴 문서</h2>
+            <p className="mp-section-desc">직접 작성한 위키 문서 목록</p>
             {documentsLoading ? (
-              <p>로딩 중...</p>
+              <p className="mp-loading">로딩 중...</p>
             ) : myDocuments.length === 0 ? (
-              <p className="empty-message">작성한 문서가 없습니다.</p>
+              <p className="mp-empty">작성한 문서가 없습니다.</p>
             ) : (
-              <table className="my-table">
-                <thead>
-                  <tr>
-                    <th>제목</th>
-                    <th>카테고리</th>
-                    <th>작성일</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myDocuments.map((doc) => (
-                    <tr key={doc.id} onClick={() => navigate(`/wiki/${doc.id}`)} className="clickable-row">
-                      <td>{doc.title}</td>
-                      <td>{doc.categoryName}</td>
-                      <td>{getRelativeTime(doc.createdAt)}</td>
+              <div className="mp-table-wrap">
+                <table className="mp-table">
+                  <thead>
+                    <tr>
+                      <th>제목</th>
+                      <th>카테고리</th>
+                      <th>작성일</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {myDocuments.map((doc) => (
+                      <tr key={doc.id} onClick={() => navigate(`/wiki/${doc.id}`)}>
+                        <td className="mp-title-cell">{doc.title}</td>
+                        <td>{doc.categoryName}</td>
+                        <td>{getRelativeTime(doc.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         );
 
       case 'inquiries':
         return (
-          <div className="my-section">
-            <div className="my-section-header">
-              <div className="my-section-header-left">
-                <h2>내가 처리한 민원</h2>
-                <label className="filter-checkbox" style={{ paddingTop: 0 }}>
-                  <input
-                    type="checkbox"
-                    checked={todayOnly}
-                    onChange={(e) => setTodayOnly(e.target.checked)}
-                  />
-                  당일 민원만 보기
-                </label>
-              </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleDownloadReport}
-                disabled={reportDownloading}
-              >
-                {reportDownloading ? '생성 중...' : '업무 일지 생성'}
-              </button>
-            </div>
+          <div>
+            <h2 className="mp-section-title">내가 처리한 민원</h2>
+            <p className="mp-section-desc">담당자로 배정된 민원 목록</p>
             {inquiriesLoading ? (
-              <p>로딩 중...</p>
-            ) : displayedInquiries.length === 0 ? (
-              <p className="empty-message">처리한 민원이 없습니다.</p>
+              <p className="mp-loading">로딩 중...</p>
+            ) : myInquiries.length === 0 ? (
+              <p className="mp-empty">처리한 민원이 없습니다.</p>
             ) : (
-              <table className="my-table">
-                <thead>
-                  <tr>
-                    <th>상태</th>
-                    <th>유형</th>
-                    <th>제목</th>
-                    <th>요청자</th>
-                    <th>작업자</th>
-                    <th>위치</th>
-                    <th>처리</th>
-                    <th>등록일</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedInquiries.map((inquiry) => {
-                    const isExpanded = expandedInquiryId === inquiry.id;
-                    return (
-                      <Fragment key={inquiry.id}>
-                        <tr
-                          onClick={() => setExpandedInquiryId(isExpanded ? null : inquiry.id)}
-                          className={`clickable-row ${isExpanded ? 'expanded' : ''}`}
-                        >
-                          <td>
-                            <span className={`status-badge status-${inquiry.status.toLowerCase().replace('_', '-')}`}>
-                              {INQUIRY_STATUS_MAP[inquiry.status]}
-                            </span>
-                          </td>
-                          <td>{INQUIRY_TYPE_MAP[inquiry.type]}</td>
-                          <td>{inquiry.title}</td>
-                          <td>{inquiry.requester}</td>
-                          <td>
-                            <div>{inquiry.workerName || '-'}</div>
-                            {inquiry.subWorkerName && (
-                              <div className="sub-worker-name">{inquiry.subWorkerName}</div>
-                            )}
-                          </td>
-                          <td>
-                            {(() => {
-                              const groups = formatLocationGroups(inquiry.locations);
-                              return groups.length > 0 ? groups.join(', ') : '-';
-                            })()}
-                          </td>
-                          <td>{inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '-'}</td>
-                          <td>{formatDateTime(inquiry.createdAt)}</td>
-                        </tr>
-                        {isExpanded && (
-                          <tr className="inquiry-detail-row">
-                            <td colSpan={8}>
-                              <div className="inquiry-detail">
-                                <div className="detail-content">
-                                  {inquiry.locations.length > 0 && (
-                                    <div className="detail-row">
-                                      <span className="detail-label">위치:</span>
-                                      <span>
-                                        {formatLocationGroups(inquiry.locations).map((g, i) => (
-                                          <span key={i}>{i > 0 && <br />}{g}</span>
-                                        ))}
-                                      </span>
-                                    </div>
-                                  )}
-                                  <div className="detail-row">
-                                    <span className="detail-label">접수 날짜:</span>
-                                    <span>{formatDateTime(inquiry.createdAt)}</span>
-                                  </div>
-                                  <div className="detail-row">
-                                    <span className="detail-label">처리 날짜:</span>
-                                    <span>{formatDateTime(inquiry.completedAt)}</span>
-                                  </div>
-                                  {inquiry.description && (
-                                    <div className="detail-row">
-                                      <span className="detail-label">증상:</span>
-                                      <span className="detail-text">{inquiry.description}</span>
-                                    </div>
-                                  )}
-                                  {inquiry.solution && (
-                                    <div className="detail-row solution">
-                                      <span className="detail-label">해결 내용:</span>
-                                      <span className="detail-text">{inquiry.solution}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+              <div className="mp-table-wrap">
+                <div className="mp-table-toolbar">
+                  <label className="mp-filter-check">
+                    <input
+                      type="checkbox"
+                      checked={todayOnly}
+                      onChange={(e) => setTodayOnly(e.target.checked)}
+                    />
+                    당일 민원만 보기
+                  </label>
+                  <button
+                    className="mp-report-btn"
+                    onClick={handleDownloadReport}
+                    disabled={reportDownloading}
+                  >
+                    {reportDownloading ? '생성 중...' : '업무 일지 생성'}
+                  </button>
+                </div>
+                <table className="mp-table">
+                  <thead>
+                    <tr>
+                      <th>상태</th>
+                      <th>유형</th>
+                      <th>제목</th>
+                      <th>요청자</th>
+                      <th>작업자</th>
+                      <th>위치</th>
+                      <th>처리</th>
+                      <th>등록일</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedInquiries.map((inquiry) => {
+                      const isExpanded = expandedInquiryId === inquiry.id;
+                      return (
+                        <Fragment key={inquiry.id}>
+                          <tr
+                            onClick={() => setExpandedInquiryId(isExpanded ? null : inquiry.id)}
+                            className={isExpanded ? 'expanded' : ''}
+                          >
+                            <td>
+                              <span className={`status-badge status-${inquiry.status.toLowerCase().replace('_', '-')}`}>
+                                {INQUIRY_STATUS_MAP[inquiry.status]}
+                              </span>
                             </td>
+                            <td>{INQUIRY_TYPE_MAP[inquiry.type]}</td>
+                            <td className="mp-title-cell">{inquiry.title}</td>
+                            <td>{inquiry.requester}</td>
+                            <td>
+                              <div>{inquiry.workerName || '-'}</div>
+                              {inquiry.subWorkerName && (
+                                <div className="mp-sub-worker">{inquiry.subWorkerName}</div>
+                              )}
+                            </td>
+                            <td>
+                              {(() => {
+                                const groups = formatLocationGroups(inquiry.locations);
+                                return groups.length > 0 ? groups.join(', ') : '-';
+                              })()}
+                            </td>
+                            <td>{inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : '-'}</td>
+                            <td>{formatDateTime(inquiry.createdAt)}</td>
                           </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          {isExpanded && (
+                            <tr className="mp-detail-row">
+                              <td colSpan={8}>
+                                <div className="mp-detail-expand">
+                                  <div className="mp-detail-meta">
+                                    {inquiry.locations.length > 0 && (
+                                      <div className="mp-detail-meta-item">
+                                        <span className="mp-detail-meta-label">위치</span>
+                                        <span className="mp-detail-meta-value">
+                                          {formatLocationGroups(inquiry.locations).map((g, i) => (
+                                            <span key={i}>{i > 0 && <br />}{g}</span>
+                                          ))}
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div className="mp-detail-meta-item">
+                                      <span className="mp-detail-meta-label">접수일</span>
+                                      <span className="mp-detail-meta-value">{formatDateTime(inquiry.createdAt)}</span>
+                                    </div>
+                                    <div className="mp-detail-meta-item">
+                                      <span className="mp-detail-meta-label">처리일</span>
+                                      <span className="mp-detail-meta-value">{formatDateTime(inquiry.completedAt)}</span>
+                                    </div>
+                                  </div>
+                                  <div className="mp-detail-split">
+                                    <div className="mp-detail-panel">
+                                      <div className="mp-detail-panel-label">증상</div>
+                                      <div className="mp-detail-panel-body">
+                                        {inquiry.description
+                                          ? inquiry.description
+                                          : <span className="mp-detail-empty">-</span>}
+                                      </div>
+                                    </div>
+                                    <div className="mp-detail-panel">
+                                      <div className="mp-detail-panel-label">해결 내용</div>
+                                      <div className="mp-detail-panel-body">
+                                        {inquiry.solution
+                                          ? inquiry.solution
+                                          : <span className="mp-detail-empty">-</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         );
@@ -449,27 +493,30 @@ export default function MyPage() {
 
   return (
     <div className="page my-page">
-      <div className="my-page-layout">
-        <aside className="my-sidebar">
-          <div className="my-sidebar-header">
-            <div className="my-sidebar-avatar">
-              {currentUser?.name?.charAt(0) || 'U'}
-            </div>
-            <span className="my-sidebar-name">{currentUser?.name}</span>
+      <div className="mp-layout">
+        <aside className="mp-nav-card">
+          <div className="mp-profile">
+            <div className="mp-avatar">{currentUser?.name?.charAt(0) || 'U'}</div>
+            <span className="mp-profile-name">{currentUser?.name}</span>
+            <span className="mp-profile-role">
+              {currentUser?.role ? getRoleLabel(currentUser.role) : ''}
+            </span>
           </div>
-          <nav className="my-sidebar-menu">
+          <nav className="mp-nav">
             {menuItems.map((item) => (
               <Link
                 key={item.key}
                 to={item.path}
-                className={`my-sidebar-item ${activeTab === item.key ? 'active' : ''}`}
+                className={`mp-nav-item${activeTab === item.key ? ' active' : ''}`}
               >
+                {item.icon}
                 {item.label}
               </Link>
             ))}
           </nav>
         </aside>
-        <main className="my-content">
+
+        <main className="mp-main">
           {renderContent()}
         </main>
       </div>

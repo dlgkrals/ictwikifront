@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, Fragment, type FormEvent, type MouseEvent } from 'react';
+import '../styles/newwikistyle.css';
 import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
 import { inquiryApi } from '../api/inquiryApi';
@@ -402,7 +403,9 @@ export default function InquiryPage() {
 
   return (
     <div className="page inquiry-page">
-      <h1 className="page-title">민원/작업 요청</h1>
+      <div className="inquiry-page-header">
+        <h1 className="page-title">최근 민원</h1>
+      </div>
 
       <div className="inquiry-controls">
         <div className="filter-bar">
@@ -479,10 +482,10 @@ export default function InquiryPage() {
               필터 초기화
             </button>
           )}
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setShowForm(!showForm)}>
+            {showForm ? '취소' : '새 요청'}
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? '취소' : '새 요청'}
-        </button>
       </div>
 
       {showForm && (
@@ -716,15 +719,186 @@ export default function InquiryPage() {
       )}
 
       <div className="inquiry-stats">
-        {activeFilterCount > 0 ? (
-          <>
-            필터 적용: {filteredInquiries.length}건 / 전체 {inquiries.length}건
-          </>
-        ) : (
-          <>총 {inquiries.length}건</>
-        )}
+        {activeFilterCount > 0
+          ? `${filteredInquiries.length}건 표시 중 / 전체 ${inquiries.length}건`
+          : `전체 ${inquiries.length}건`}
       </div>
 
+      {/* 모바일 카드 뷰 */}
+      <div className="inquiry-card-list">
+        {filteredInquiries.length === 0 ? (
+          <p className="empty-message">조건에 맞는 민원이 없습니다.</p>
+        ) : filteredInquiries.map((inquiry) => {
+          const isExpanded = expandedId === inquiry.id;
+          const isEditing = editingId === inquiry.id;
+          const statusLabel = INQUIRY_STATUS_MAP[inquiry.status];
+          const typeLabel = INQUIRY_TYPE_MAP[inquiry.type];
+          const methodLabel = inquiry.method ? INQUIRY_METHOD_MAP[inquiry.method] : null;
+          const locationStr = formatLocationGroups(inquiry.locations).join(', ') || '-';
+          return (
+            <div
+              key={inquiry.id}
+              className={`inquiry-card${isExpanded ? ' expanded' : ''}`}
+              onClick={() => handleRowClick(inquiry.id)}
+            >
+              <div className="inquiry-card-top">
+                <span className={`status-badge ${getStatusClass(inquiry.status)}`}>{statusLabel}</span>
+                <span className="inquiry-card-date">{getRelativeTime(inquiry.createdAt)}</span>
+              </div>
+              <div className="inquiry-card-title">{inquiry.title}</div>
+              <div className="inquiry-card-grid">
+                <div className="inquiry-card-field">
+                  <span className="inquiry-card-label">요청자</span>
+                  <span className="inquiry-card-value">{inquiry.requester}</span>
+                </div>
+                <div className="inquiry-card-field">
+                  <span className="inquiry-card-label">작업자</span>
+                  <span className="inquiry-card-value">{inquiry.workerName || '-'}</span>
+                </div>
+                <div className="inquiry-card-field">
+                  <span className="inquiry-card-label">위치</span>
+                  <span className="inquiry-card-value">{locationStr}</span>
+                </div>
+                <div className="inquiry-card-field">
+                  <span className="inquiry-card-label">유형</span>
+                  <span className="inquiry-card-value">{typeLabel}</span>
+                </div>
+              </div>
+              <div className="inquiry-card-footer" onClick={(e) => e.stopPropagation()}>
+                {methodLabel && <span className="inquiry-card-method">처리: {methodLabel}</span>}
+                <button
+                  className={`btn-rag${ragOpenId === inquiry.id ? ' active' : ''}`}
+                  onClick={(e: MouseEvent) => { if (!isExpanded) setExpandedId(inquiry.id); handleRagClick(inquiry.id, e); }}
+                  title="유사 사례 조회"
+                >💡</button>
+              </div>
+              {isExpanded && (
+                <div className="inquiry-card-detail" onClick={(e) => e.stopPropagation()}>
+                  {isEditing ? (
+                    <div className="inquiry-edit-form">
+                      <div className="edit-grid">
+                        <div className="edit-group">
+                          <label>작업 이름 *</label>
+                          <input type="text" value={editData.title} onChange={(e) => handleEditChange('title', e.target.value)} className="form-input" />
+                        </div>
+                        <div className="edit-group">
+                          <label>요청자 *</label>
+                          <input type="text" value={editData.requester} onChange={(e) => handleEditChange('requester', e.target.value)} className="form-input" />
+                        </div>
+                        <div className="edit-group">
+                          <label>유형</label>
+                          <select value={editData.type} onChange={(e) => handleEditChange('type', e.target.value as InquiryTypeLabel)} className="form-select">
+                            {INQUIRY_TYPES.map((t) => (<option key={t} value={t}>{t}</option>))}
+                          </select>
+                        </div>
+                        <div className="edit-group">
+                          <label>상태</label>
+                          <select value={editData.status} onChange={(e) => handleEditChange('status', e.target.value as InquiryStatusEnum)} className="form-select">
+                            {statusOptions.map((s) => (<option key={s.code} value={s.code}>{s.displayName}</option>))}
+                          </select>
+                        </div>
+                        <div className="edit-group">
+                          <label>작업자</label>
+                          <select value={editData.workerId ?? ''} onChange={(e) => handleEditChange('workerId', e.target.value ? Number(e.target.value) : null)} className="form-select">
+                            <option value="">선택</option>
+                            {staffUsers.map((staff) => (<option key={staff.id} value={staff.id}>{staff.name}</option>))}
+                          </select>
+                        </div>
+                        <div className="edit-group">
+                          <label>처리 방식</label>
+                          <select value={editData.method} onChange={(e) => handleEditChange('method', e.target.value as InquiryMethodLabel)} className="form-select">
+                            <option value="">선택</option>
+                            {INQUIRY_METHOD.map((m) => (<option key={m} value={m}>{m}</option>))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="edit-group full">
+                        <label>증상 *</label>
+                        <textarea value={editData.description} onChange={(e) => handleEditChange('description', e.target.value)} className="form-textarea" rows={3} />
+                      </div>
+                      <div className="edit-group full">
+                        <label>해결 내용</label>
+                        <textarea value={editData.solution} onChange={(e) => handleEditChange('solution', e.target.value)} className="form-textarea" rows={2} placeholder="해결 방법을 입력하세요" />
+                      </div>
+                      <div className="edit-actions">
+                        <button className="btn btn-primary" onClick={saveEdit}>저장</button>
+                        <button className="btn btn-secondary" onClick={cancelEdit}>취소</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="detail-header">
+                        <button className="btn btn-sm btn-secondary" onClick={(e: MouseEvent) => { e.stopPropagation(); startEdit(inquiry); }}>수정</button>
+                        {inquiry.status !== 'COMPLETED' && (
+                          <button className="btn btn-sm btn-primary" onClick={(e: MouseEvent) => handleComplete(inquiry.id, e)}>완료</button>
+                        )}
+                        <button className="btn btn-sm btn-danger" onClick={(e: MouseEvent) => { e.stopPropagation(); handleDelete(inquiry.id); }}>삭제</button>
+                      </div>
+                      {ragOpenId === inquiry.id && (
+                        <div className="rag-bubble">
+                          <p className="rag-title">유사사례</p>
+                          {ragLoading ? (
+                            <p className="rag-loading">유사사례를 조회하는 중입니다...</p>
+                          ) : ragError ? (
+                            <p className="rag-error">{ragError}</p>
+                          ) : ragResult ? (
+                            <>
+                              <p className="rag-summary">{ragResult.summary}</p>
+                              {ragResult.references.length > 0 && (
+                                <>
+                                  <p className="rag-references-title">참고 사례 ({ragResult.referenceCount}건)</p>
+                                  {ragResult.references.map((ref) => (
+                                    <div key={ref.inquiryId} className="rag-reference-item">
+                                      <p className="rag-reference-meta">{ref.type} · {ref.location}</p>
+                                      <p className="rag-reference-problem"><strong>증상:</strong> {ref.problem}</p>
+                                      <p className="rag-reference-solution"><strong>해결:</strong> {ref.solution}</p>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                      <div className="inquiry-card-meta">
+                        {inquiry.locations.length > 0 && (
+                          <div className="detail-row">
+                            <span className="detail-label">위치:</span>
+                            <span>{formatLocationGroups(inquiry.locations).map((g, i) => (<span key={i}>{i > 0 && <br />}{g}</span>))}</span>
+                          </div>
+                        )}
+                        <div className="detail-row">
+                          <span className="detail-label">접수 날짜:</span>
+                          <span>{formatDateTime(inquiry.createdAt)}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">처리 날짜:</span>
+                          <span>{formatDateTime(inquiry.completedAt)}</span>
+                        </div>
+                      </div>
+                      {inquiry.description && (
+                        <div className="detail-card-section">
+                          <div className="detail-split-label">증상</div>
+                          <div className="detail-split-body"><LinkItUrl>{inquiry.description}</LinkItUrl></div>
+                        </div>
+                      )}
+                      {inquiry.solution && (
+                        <div className="detail-card-section detail-card-solution">
+                          <div className="detail-split-label">해결 내용</div>
+                          <div className="detail-split-body"><LinkItUrl>{inquiry.solution}</LinkItUrl></div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 데스크탑 테이블 뷰 */}
+      <div className="inquiry-table-wrapper">
       <table className="inquiry-table">
         <thead>
           <tr>
@@ -769,10 +943,11 @@ export default function InquiryPage() {
                     <td className="inquiry-title-cell">{inquiry.title}</td>
                     <td>{inquiry.requester}</td>
                     <td>
-                      <div>{inquiry.workerName || '-'}</div>
-                      {inquiry.subWorkerName && (
-                        <div className="sub-worker-name">{inquiry.subWorkerName}</div>
-                      )}
+                      {inquiry.workerName
+                        ? inquiry.subWorkerName
+                          ? `${inquiry.workerName} / ${inquiry.subWorkerName}`
+                          : inquiry.workerName
+                        : '-'}
                     </td>
                     <td>
                       {(() => {
@@ -1094,36 +1269,44 @@ export default function InquiryPage() {
                               </div>
                             )}
                             <div className="detail-content">
-                              {inquiry.locations.length > 0 && (
+                              <div className="detail-meta-row">
+                                {inquiry.locations.length > 0 && (
+                                  <div className="detail-row">
+                                    <span className="detail-label">위치:</span>
+                                    <span>
+                                      {formatLocationGroups(inquiry.locations).map((g, i) => (
+                                        <span key={i}>{i > 0 && <br />}{g}</span>
+                                      ))}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="detail-row">
-                                  <span className="detail-label">위치:</span>
-                                  <span>
-                                    {formatLocationGroups(inquiry.locations).map((g, i) => (
-                                      <span key={i}>{i > 0 && <br />}{g}</span>
-                                    ))}
-                                  </span>
+                                  <span className="detail-label">접수 날짜:</span>
+                                  <span>{formatDateTime(inquiry.createdAt)}</span>
                                 </div>
-                              )}
-                              <div className="detail-row">
-                                <span className="detail-label">접수 날짜:</span>
-                                <span>{formatDateTime(inquiry.createdAt)}</span>
-                              </div>
-                              <div className="detail-row">
-                                <span className="detail-label">처리 날짜:</span>
-                                <span>{formatDateTime(inquiry.completedAt)}</span>
-                              </div>
-                              {inquiry.description && (
                                 <div className="detail-row">
-                                  <span className="detail-label">증상:</span>
-                                  <span className="detail-text"><LinkItUrl>{inquiry.description}</LinkItUrl></span>
+                                  <span className="detail-label">처리 날짜:</span>
+                                  <span>{formatDateTime(inquiry.completedAt)}</span>
                                 </div>
-                              )}
-                              {inquiry.solution && (
-                                <div className="detail-row solution">
-                                  <span className="detail-label">해결 내용:</span>
-                                  <span className="detail-text"><LinkItUrl>{inquiry.solution}</LinkItUrl></span>
+                              </div>
+                              <div className="detail-split">
+                                <div className="detail-symptoms">
+                                  <div className="detail-split-label">증상</div>
+                                  <div className="detail-split-body">
+                                    {inquiry.description
+                                      ? <LinkItUrl>{inquiry.description}</LinkItUrl>
+                                      : <span className="detail-empty">-</span>}
+                                  </div>
                                 </div>
-                              )}
+                                <div className="detail-solution-panel">
+                                  <div className="detail-split-label">해결 내용</div>
+                                  <div className="detail-split-body">
+                                    {inquiry.solution
+                                      ? <LinkItUrl>{inquiry.solution}</LinkItUrl>
+                                      : <span className="detail-empty">-</span>}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1136,6 +1319,7 @@ export default function InquiryPage() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

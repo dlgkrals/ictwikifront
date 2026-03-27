@@ -81,7 +81,7 @@ export default function DocumentEditor({ content, onChange, disabled }: Document
   };
 
   return (
-    <div className="document-editor">
+    <div className="editor-layout">
       <input
         ref={fileInputRef}
         type="file"
@@ -89,53 +89,56 @@ export default function DocumentEditor({ content, onChange, disabled }: Document
         style={{ display: 'none' }}
         onChange={handleFileInput}
       />
-      <div className="editor-layout">
-        <div className="editor-panel">
-          <div className="editor-panel-header">
-            편집기
-            <button
-              type="button"
-              className="editor-image-btn"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={disabled || uploading}
-              title="이미지 업로드"
-            >
-              {uploading ? '업로드 중...' : '🖼 이미지'}
-            </button>
-          </div>
-          <div
-            className={`editor-drop-zone${dragOver ? ' drag-over' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
+      {/* 편집기 패널 */}
+      <div className="editor-panel">
+        <div className="editor-panel-header">
+          <span className="editor-panel-label">편집기</span>
+          <button
+            type="button"
+            className="editor-image-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || uploading}
+            title="이미지 업로드"
           >
-            <textarea
-              ref={textareaRef}
-              className="form-textarea editor-textarea"
-              value={content}
-              onChange={handleContentChange}
-              onClick={handleCursorMove}
-              onKeyUp={handleCursorMove}
-              onPaste={handlePaste}
-              placeholder="내용을 입력하세요..."
-              rows={20}
-              disabled={disabled || uploading}
-            />
-          </div>
+            {uploading ? '업로드 중...' : '이미지'}
+          </button>
         </div>
-        <div className="editor-panel">
-          <div className="editor-panel-header">실시간 미리보기</div>
-          <div className="editor-preview">
-            {content.trim() ? (
-              <NamuMarkRenderer content={content} className="namu-content editor-preview-content" />
-            ) : (
-              <p className="empty-preview">미리보기할 내용이 없습니다.</p>
-            )}
-          </div>
+        <div
+          className={`editor-drop-zone${dragOver ? ' drag-over' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+        >
+          <textarea
+            ref={textareaRef}
+            className="editor-textarea"
+            value={content}
+            onChange={handleContentChange}
+            onClick={handleCursorMove}
+            onKeyUp={handleCursorMove}
+            onPaste={handlePaste}
+            placeholder="내용을 입력하세요..."
+            disabled={disabled || uploading}
+          />
         </div>
-        <div className="editor-panel">
-          <SyntaxHelperTab onInsert={insertSyntax} />
+      </div>
+      {/* 미리보기 패널 */}
+      <div className="editor-panel">
+        <div className="editor-panel-header">
+          <span className="editor-panel-label">실시간 미리보기</span>
+          <span className="editor-preview-hint">최종 렌더링</span>
         </div>
+        <div className="editor-preview">
+          {content.trim() ? (
+            <NamuMarkRenderer content={content} className="namu-content editor-preview-content" />
+          ) : (
+            <p className="empty-preview">미리보기할 내용이 없습니다.</p>
+          )}
+        </div>
+      </div>
+      {/* 문법 도우미 패널 */}
+      <div className="editor-panel">
+        <SyntaxHelperTab onInsert={insertSyntax} />
       </div>
     </div>
   );

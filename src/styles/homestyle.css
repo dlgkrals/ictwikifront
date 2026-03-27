@@ -1,0 +1,707 @@
+/*
+  Home Page Theme CSS
+  .home-page 스코프로 격리 — 기존 wiki.css 영향 없음
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+.home-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 페이지 헤더 (제목 + 통계) ── */
+.home-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.home-page .page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.home-subtitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.home-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-stat {
+  text-align: right;
+}
+
+.home-stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.home-stat-value.home-stat-pending {
+  color: #d97706;
+}
+
+.home-stat-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-top: 3px;
+}
+
+.home-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: #e2e8f0;
+}
+
+/* ── 카드 공통 ── */
+.home-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  overflow: hidden;
+}
+
+.home-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.home-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-card-accent {
+  display: inline-block;
+  width: 3px;
+  height: 22px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.notice-accent   { background: #1d4ed8; }
+.inquiry-accent  { background: #d97706; }
+.document-accent { background: #16a34a; }
+
+.home-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.home-card-more {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.home-card-more:hover {
+  opacity: 0.7;
+}
+
+/* ── 공지사항 목록 ── */
+.home-notice-list {
+  list-style: none;
+  padding: 8px 20px 16px;
+}
+
+.home-notice-item {
+  border-bottom: 1px solid #f8fafc;
+}
+
+.home-notice-item:last-child {
+  border-bottom: none;
+}
+
+.home-notice-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  text-decoration: none;
+  transition: color 0.1s;
+}
+
+.home-notice-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.home-notice-badge {
+  flex-shrink: 0;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.home-notice-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.home-notice-link:hover .home-notice-title {
+  color: #1d4ed8;
+}
+
+.home-notice-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* ── 최근 민원 섹션 ── */
+.home-page .inquiry-section {
+  margin-top: 20px;
+}
+
+.home-page .inquiry-section .home-card-header {
+  padding: 16px 20px;
+}
+
+.home-page .inquiry-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.home-page .btn-sm {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.home-page .btn.btn-primary.btn-sm {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.home-page .btn.btn-primary.btn-sm:hover {
+  background: #1e40af;
+}
+
+.home-page .btn.btn-secondary.btn-sm {
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.home-page .btn.btn-secondary.btn-sm:hover {
+  background: #f8fafc;
+}
+
+/* 민원 테이블 */
+.home-page .inquiry-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.home-page .inquiry-table thead th {
+  background: #f8fafc;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.home-page .inquiry-table tbody td {
+  padding: 12px 16px;
+  font-size: 0.8125rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.home-page .inquiry-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.home-page .inquiry-row {
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.home-page .inquiry-row:hover td {
+  background-color: #f8fafc;
+}
+
+.home-page .inquiry-row.expanded td {
+  background-color: #eff6ff;
+}
+
+/* 민원 상태 배지 */
+.home-page .status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.home-page .status-badge.status-pending  { background:#f1f5f9; color:#475569; }
+.home-page .status-badge.status-progress { background:#dbeafe; color:#1d4ed8; }
+.home-page .status-badge.status-done     { background:#dcfce7; color:#15803d; }
+.home-page .status-badge.status-hold     { background:#fef9c3; color:#a16207; }
+.home-page .status-badge.status-overnight{ background:#f5f3ff; color:#6d28d9; }
+
+/* ── 문서 목록 섹션 ── */
+.home-page .documents-section .home-card-header {
+  padding: 16px 20px 12px;
+}
+
+.documents-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #64748b;
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.home-icon-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.home-icon-btn-primary {
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 700;
+}
+
+.home-icon-btn-primary:hover {
+  background: #1e40af;
+  color: #fff;
+}
+
+.home-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.home-category-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.home-category-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.home-category-btn.active {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.home-doc-group {
+  padding: 14px 20px 0;
+}
+
+.home-doc-group:last-child {
+  padding-bottom: 16px;
+}
+
+.home-doc-category {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-doc-category::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #f1f5f9;
+}
+
+.home-doc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-doc-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  padding: 4px 0;
+  border-radius: 4px;
+  transition: color 0.1s;
+}
+
+.home-doc-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.home-doc-link:hover .home-doc-title {
+  color: #1d4ed8;
+}
+
+.home-doc-date {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ── InquiryForm 컴포넌트 ── */
+.iform-wrap {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid #1d4ed8;
+  border-radius: 8px;
+  margin: 0 0 16px;
+  overflow: hidden;
+}
+
+.iform-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.iform-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.iform-cancel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.iform-cancel:hover {
+  color: #475569;
+}
+
+.iform-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  padding: 16px 18px;
+}
+
+.iform-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.iform-field-full {
+  grid-column: 1 / -1;
+}
+
+.iform-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.iform-required {
+  color: #ef4444;
+}
+
+.iform-input {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.iform-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px #dbeafe;
+  background: #ffffff;
+}
+
+.iform-input-room {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.iform-select {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 7px 28px 7px 10px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.iform-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px #dbeafe;
+  background-color: #ffffff;
+}
+
+.iform-textarea {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  outline: none;
+  resize: vertical;
+  line-height: 1.6;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.iform-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px #dbeafe;
+  background: #ffffff;
+}
+
+/* 위치 */
+.iform-locations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.iform-location-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.iform-location-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.iform-location-extra-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+
+.iform-btn-ghost {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: none;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.iform-btn-ghost:hover {
+  background: #eff6ff;
+}
+
+.iform-btn-danger-ghost {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #dc2626;
+  background: none;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.iform-btn-danger-ghost:hover {
+  background: #fef2f2;
+}
+
+/* 하단 액션 버튼 */
+.iform-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.iform-btn-primary {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.iform-btn-primary:hover {
+  background: #1e40af;
+}
+
+.iform-btn-secondary {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.iform-btn-secondary:hover {
+  background: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  .iform-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iform-location-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .iform-input-room {
+    width: 100%;
+  }
+}

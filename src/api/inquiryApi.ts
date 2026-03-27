@@ -29,8 +29,10 @@ export interface InquiryDashboardStats {
   methodCounts: InquiryStatsItem[];
   buildingCounts: InquiryStatsItem[];
   avgDailyCount: number;
-  avgWeeklyCount: number;
-  avgMonthlyCount: number;
+  avgWeeklyCount: number | null;    // 당주 모드는 null
+  avgMonthlyCount: number | null;   // 연도 모드만
+  currentMonthCount: number | null; // 당월/당주 모드
+  currentWeekCount: number | null;  // 당주 모드만
 }
 
 export const inquiryApi = {
@@ -135,8 +137,10 @@ export const inquiryApi = {
   },
 
   // 대시보드 통계
-  getDashboardStats: async (): Promise<InquiryDashboardStats> => {
-    const response = await apiClient.get<InquiryDashboardStats>('/api/inquiries/stats/dashboard');
+  getDashboardStats: async (year?: number, month?: number, week?: number): Promise<InquiryDashboardStats> => {
+    const response = await apiClient.get<InquiryDashboardStats>('/api/inquiries/stats/dashboard', {
+      params: { year, month, week },
+    });
     return response.data;
   },
 

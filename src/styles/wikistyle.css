@@ -1,0 +1,645 @@
+/*
+  Wiki Page & Notice Page Styles
+  wp-* → wiki-page, np-* → notice pages
+*/
+
+/* ── Shared header ── */
+.wiki-page .wp-header,
+.notice-page .wp-header,
+.notice-detail-page .wp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+  font-family: 'Inter', sans-serif;
+}
+
+.wiki-page .wp-header-left,
+.notice-page .wp-header-left,
+.notice-detail-page .wp-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Shared title */
+.wiki-page .wp-title,
+.notice-page .wp-title,
+.notice-detail-page .wp-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.25;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Shared action buttons */
+.wiki-page .wp-actions,
+.notice-page .wp-actions,
+.notice-detail-page .wp-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.wp-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 7px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.wp-btn-secondary {
+  color: #475569;
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+.wp-btn-secondary:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.wp-btn-delete {
+  color: #ef4444;
+  background: #ffffff;
+  border-color: #fecaca;
+}
+.wp-btn-delete:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.wp-btn-primary {
+  color: #ffffff;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+.wp-btn-primary:hover {
+  background: #1e40af;
+}
+
+.wp-btn-back {
+  color: #64748b;
+  background: transparent;
+  border: none;
+  padding: 7px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.wp-btn-back:hover {
+  color: #0f172a;
+}
+
+/* ═══════════════════════════════════
+   WIKI PAGE
+════════════════════════════════════ */
+
+/* Meta row (category badge + dates) */
+.wiki-page .wp-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.wiki-page .wp-category-badge {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-family: 'Inter', sans-serif;
+}
+
+.wiki-page .wp-dates {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: 'Inter', sans-serif;
+}
+
+/* TOC */
+.wiki-page .wp-toc {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #1d4ed8;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 20px;
+  margin-bottom: 28px;
+  display: inline-block;
+  min-width: 180px;
+  max-width: 420px;
+}
+
+.wiki-page .wp-toc-label {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.wiki-page .wp-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wiki-page .wp-toc-item a {
+  font-size: 0.8125rem;
+  color: #475569;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.15s;
+}
+.wiki-page .wp-toc-item a:hover { color: #1d4ed8; }
+
+.wiki-page .wp-toc-lv2 { padding-left: 0; }
+.wiki-page .wp-toc-lv3 { padding-left: 12px; }
+.wiki-page .wp-toc-lv4 { padding-left: 24px; }
+.wiki-page .wp-toc-lv5 { padding-left: 36px; }
+.wiki-page .wp-toc-lv6 { padding-left: 48px; }
+
+/* Content */
+.wiki-page .wp-content {
+  margin-bottom: 32px;
+}
+
+/* Section containers */
+.wiki-page .wiki-section {
+  position: relative;
+}
+
+/* Heading row: heading element + inline edit button */
+.wiki-page .section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wiki-page .section-header-lv2 {
+  border-bottom: 1px solid #a2a9b1;
+  padding-bottom: 5px;
+  margin: 18px 0 8px;
+}
+.wiki-page .section-header-lv3 {
+  margin: 15px 0 8px;
+}
+.wiki-page .section-header-lv4,
+.wiki-page .section-header-lv5,
+.wiki-page .section-header-lv6 {
+  margin: 12px 0 6px;
+}
+.wiki-page .section-header h2,
+.wiki-page .section-header h3,
+.wiki-page .section-header h4,
+.wiki-page .section-header h5,
+.wiki-page .section-header h6 {
+  margin: 0;
+  border-bottom: none;
+  padding: 0;
+  flex: 1;
+}
+
+/* Intro section (no heading): edit button floated right */
+.wiki-page .section-header-intro {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+  min-height: 0;
+}
+
+/* Section edit button */
+.wiki-page .wp-btn-edit-section {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.wiki-page .wiki-section:hover .wp-btn-edit-section {
+  opacity: 1;
+}
+.wiki-page .wp-btn-edit-section:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+/* Section edit form */
+.wiki-page .wp-section-form {
+  margin-top: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.wiki-page .wp-section-textarea {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  width: 100%;
+  min-height: 160px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.wiki-page .wp-section-textarea:focus {
+  border-color: #1d4ed8;
+}
+
+.wiki-page .wp-section-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.wiki-page .wp-section-save {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wiki-page .wp-section-save:hover { background: #1e40af; }
+
+.wiki-page .wp-section-cancel {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wiki-page .wp-section-cancel:hover {
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* ── Info Panel (history / backlinks / outlinks) ── */
+.wiki-page .wp-info-panel {
+  margin-top: 40px;
+  border-top: 1px solid #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+.wiki-page .wp-tabs {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.wiki-page .wp-tab {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wiki-page .wp-tab:hover { color: #0f172a; }
+.wiki-page .wp-tab.active {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+}
+
+.wiki-page .wp-tab-body {
+  padding: 20px 0;
+}
+
+.wiki-page .wp-info-loading,
+.wiki-page .wp-info-empty {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+/* History table */
+.wiki-page .wp-history-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wiki-page .wp-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.wiki-page .wp-history-table thead tr {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.wiki-page .wp-history-table th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wiki-page .wp-history-table td {
+  padding: 11px 16px;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.wiki-page .wp-history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.wiki-page .wp-history-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.wiki-page .wp-history-version {
+  font-weight: 700;
+  color: #1d4ed8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.wiki-page .wp-history-reason {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.wiki-page .wp-history-date {
+  color: #94a3b8;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+
+.wiki-page .wp-history-toggle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wiki-page .wp-history-toggle:hover {
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.wiki-page .wp-history-expand-row td {
+  padding: 0;
+}
+
+.wiki-page .wp-history-expand-body {
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Link list (backlinks / outlinks) */
+.wiki-page .wp-link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wiki-page .wp-link-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wiki-page .wp-link-item {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1d4ed8;
+  text-decoration: none;
+  transition: text-decoration 0.1s;
+}
+.wiki-page .wp-link-item:hover { text-decoration: underline; }
+
+.wiki-page .wp-link-display {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+/* ═══════════════════════════════════
+   NOTICE LIST PAGE
+════════════════════════════════════ */
+.notice-page {
+  font-family: 'Inter', sans-serif;
+}
+
+.notice-page .np-count {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin-top: 4px;
+  font-weight: 500;
+  display: block;
+}
+
+.notice-page .np-list-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-top: 16px;
+}
+
+.notice-page .np-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notice-page .np-item {
+  border-bottom: 1px solid #f1f5f9;
+}
+.notice-page .np-item:last-child {
+  border-bottom: none;
+}
+
+.notice-page .np-item-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  text-decoration: none;
+  transition: background 0.1s;
+  gap: 16px;
+}
+.notice-page .np-item-link:hover {
+  background: #f8fafc;
+}
+
+.notice-page .np-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.notice-page .np-badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notice-page .np-item-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notice-page .np-item-link:hover .np-item-title {
+  color: #1d4ed8;
+}
+
+.notice-page .np-item-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════
+   NOTICE DETAIL PAGE
+════════════════════════════════════ */
+.notice-detail-page {
+  font-family: 'Inter', sans-serif;
+}
+
+.notice-detail-page .np-detail-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.notice-detail-page .np-detail-head {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.notice-detail-page .np-badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.notice-detail-page .np-detail-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  line-height: 1.3;
+}
+
+.notice-detail-page .np-detail-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  flex-wrap: wrap;
+}
+
+.notice-detail-page .np-detail-body {
+  padding: 28px 32px;
+  line-height: 1.8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .wiki-page .wp-title,
+  .notice-page .wp-title,
+  .notice-detail-page .wp-title,
+  .notice-detail-page .np-detail-title {
+    font-size: 1.25rem;
+  }
+
+  .wiki-page .wp-toc {
+    max-width: 100%;
+    display: block;
+  }
+
+  .notice-detail-page .np-detail-head,
+  .notice-detail-page .np-detail-body {
+    padding: 20px 16px;
+  }
+
+  .notice-page .np-item-link {
+    padding: 14px 16px;
+  }
+}

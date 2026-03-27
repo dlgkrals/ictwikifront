@@ -1,0 +1,489 @@
+/*
+  My Page Styles
+  .my-page 스코프로 격리 (wiki.css의 .my-page 스타일 override)
+*/
+
+/* ── Layout: nav card + main ── */
+.my-page .mp-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Nav Card ── */
+.my-page .mp-nav-card {
+  width: 196px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 10px 16px;
+  position: sticky;
+  top: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Profile section */
+.my-page .mp-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.my-page .mp-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.my-page .mp-profile-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.my-page .mp-profile-role {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Nav items */
+.my-page .mp-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.my-page .mp-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.my-page .mp-nav-item:hover:not(.active) {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.my-page .mp-nav-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.my-page .mp-nav-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ── Main Content ── */
+.my-page .mp-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Section Header ── */
+.my-page .mp-section-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+.my-page .mp-section-desc {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+/* ── Info Card ── */
+.my-page .mp-info-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.my-page .mp-info-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 16px;
+}
+
+.my-page .mp-info-row:last-child {
+  border-bottom: none;
+}
+
+.my-page .mp-info-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.my-page .mp-info-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.my-page .mp-role-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Messages ── */
+.my-page .mp-message {
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.my-page .mp-message-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.my-page .mp-message-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── Password Form Card ── */
+.my-page .mp-form-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 420px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.my-page .mp-field {
+  margin-bottom: 16px;
+}
+
+.my-page .mp-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 7px;
+}
+
+.my-page .mp-input {
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.my-page .mp-input:focus {
+  border-color: #1d4ed8;
+  background: #ffffff;
+}
+
+.my-page .mp-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.my-page .mp-input::placeholder {
+  color: #cbd5e1;
+  font-size: 0.8125rem;
+}
+
+.my-page .mp-submit-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+
+.my-page .mp-submit-btn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.my-page .mp-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Table ── */
+.my-page .mp-table-wrap {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.my-page .mp-table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.my-page .mp-filter-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+
+.my-page .mp-filter-check input {
+  accent-color: #1d4ed8;
+  cursor: pointer;
+}
+
+.my-page .mp-report-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.my-page .mp-report-btn:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+.my-page .mp-report-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.my-page .mp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.my-page .mp-table thead tr {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.my-page .mp-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.my-page .mp-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+  cursor: pointer;
+}
+
+.my-page .mp-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.my-page .mp-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.my-page .mp-table td {
+  padding: 12px 16px;
+  color: #475569;
+  vertical-align: middle;
+}
+
+.my-page .mp-table tbody tr.expanded {
+  background: #f8fafc;
+}
+
+.my-page .mp-table tbody tr.mp-detail-row {
+  cursor: default;
+  background: #f8fafc;
+}
+
+.my-page .mp-table tbody tr.mp-detail-row:hover {
+  background: #f8fafc;
+}
+
+.my-page .mp-table td.mp-title-cell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* ── Detail Expand ── */
+.my-page .mp-detail-expand {
+  padding: 16px 4px 8px;
+}
+
+.my-page .mp-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.my-page .mp-detail-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.my-page .mp-detail-meta-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.my-page .mp-detail-meta-value {
+  font-size: 0.8125rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.my-page .mp-detail-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.my-page .mp-detail-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.my-page .mp-detail-panel-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.my-page .mp-detail-panel-body {
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.my-page .mp-detail-empty {
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+.my-page .mp-sub-worker {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* Loading/Empty */
+.my-page .mp-loading,
+.my-page .mp-empty {
+  font-family: 'Inter', sans-serif;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  padding: 20px 0;
+}
+
+.my-page .mp-empty {
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .my-page .mp-layout { flex-direction: column; }
+  .my-page .mp-nav-card { width: 100%; position: static; }
+  .my-page .mp-profile { flex-direction: row; text-align: left; }
+  .my-page .mp-nav { flex-direction: row; flex-wrap: wrap; }
+  .my-page .mp-detail-split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .my-page .mp-form-card { padding: 16px; }
+  .my-page .mp-info-label { width: 52px; }
+}

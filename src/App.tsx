@@ -36,9 +36,9 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 모바일에서 페이지 이동 시 사이드바 닫기
+  // 모바일에서 페이지 이동 시 사이드바 닫기 (통계 페이지 제외)
   useEffect(() => {
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 768 && location.pathname !== '/stats') {
       setSidebarOpen(false);
     }
   }, [location.pathname]);

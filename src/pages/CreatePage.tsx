@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 import DocumentEditor from '../components/editor/DocumentEditor';
 import { DOCUMENT_CATEGORIES, type DocumentCategoryCode } from '../types';
+import '../styles/editorstyle.css';
 
 export default function CreatePage() {
   const [title, setTitle] = useState('');
@@ -31,59 +32,43 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="page create-page">
-      <h1 className="page-title">새 문서 만들기</h1>
-      <form onSubmit={handleSubmit} className="document-form">
-        <div className="form-group">
-          <label htmlFor="title">제목</label>
+    <form className="editor-page" onSubmit={handleSubmit}>
+      <div className="editor-topbar">
+        <div className="editor-topbar-meta">
+          <span className="editor-topbar-label">새 문서</span>
           <input
-            type="text"
-            id="title"
-            className="form-input"
+            className="editor-title-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="문서 제목"
+            placeholder="문서 제목을 입력하세요"
             disabled={saving}
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="category">카테고리</label>
+        <div className="editor-topbar-controls">
           <select
-            id="category"
-            className="form-select"
+            className="editor-category-select"
             value={categoryCode}
             onChange={(e) => setCategoryCode(e.target.value as DocumentCategoryCode)}
             disabled={saving}
           >
             {DOCUMENT_CATEGORIES.map((cat) => (
-              <option key={cat.code} value={cat.code}>
-                {cat.label}
-              </option>
+              <option key={cat.code} value={cat.code}>{cat.label}</option>
             ))}
           </select>
-        </div>
-        <div className="form-group">
-          <label>내용</label>
-          <DocumentEditor
-            content={content}
-            onChange={setContent}
-            disabled={saving}
-          />
-        </div>
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? '생성 중...' : '생성'}
-          </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="editor-btn-discard"
             onClick={() => navigate('/')}
             disabled={saving}
           >
             취소
           </button>
+          <button type="submit" className="editor-btn-save" disabled={saving}>
+            {saving ? '생성 중...' : '저장'}
+          </button>
         </div>
-      </form>
-    </div>
+      </div>
+      <DocumentEditor content={content} onChange={setContent} disabled={saving} />
+    </form>
   );
 }

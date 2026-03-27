@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     .slice(0, 5);
 
   const handleLinkClick = (path: string) => {
-    onClose();
+    if (path !== '/stats') onClose();
     navigate(path);
   };
 
@@ -56,16 +56,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <div className="sidebar-section">
-          <h3 className="sidebar-title">통계</h3>
-          <ul className="tool-list">
-            <li>
-              <button className="tool-link" onClick={() => handleLinkClick('/stats')}>
-                통계 보기
-              </button>
-            </li>
-          </ul>
-        </div>
+        <nav className="sidebar-nav">
+          <button className="sidebar-nav-item" onClick={() => handleLinkClick('/stats')}>
+            통계 보기
+          </button>
+        </nav>
+
         <div className="sidebar-section">
           <h3 className="sidebar-title">최근 수정</h3>
           <ul className="recent-list">

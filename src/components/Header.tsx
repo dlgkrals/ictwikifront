@@ -34,6 +34,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     logout();
   };
 
+  const roleLabel = currentUser?.role === 'ADMIN' ? '관리자'
+    : currentUser?.role === 'TA' ? 'TA'
+    : '사용자';
+
   return (
     <header className="header">
       <div className="header-left">
@@ -42,8 +46,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           <span className="sidebar-toggle-bar"></span>
           <span className="sidebar-toggle-bar"></span>
         </button>
-        <Link to="/" className="logo">
-          ICT Wiki
+        <Link to="/" className="logo-group">
+          <span className="logo-name">ICT Wiki</span>
+          <span className="logo-sub">Digital Archivist</span>
         </Link>
       </div>
       <div className="header-center">
@@ -56,6 +61,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           </Link>
         )}
         <div className="profile-wrapper" ref={dropdownRef}>
+          <div className="profile-info">
+            <span className="profile-display-name">{currentUser?.name}</span>
+            <span className="profile-display-role">{roleLabel}</span>
+          </div>
           <button
             className="profile-button"
             onClick={() => setShowDropdown(!showDropdown)}
