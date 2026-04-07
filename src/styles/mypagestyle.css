@@ -305,6 +305,30 @@
   cursor: pointer;
 }
 
+.my-page .mp-report-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.my-page .mp-report-date {
+  user-select: none !important;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.my-page .mp-report-date:focus {
+  border-color: #3b82f6;
+}
+
 .my-page .mp-report-btn {
   font-family: 'Inter', sans-serif;
   font-size: 0.8rem;

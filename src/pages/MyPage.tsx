@@ -144,6 +144,7 @@ export default function MyPage() {
   const [myInquiries, setMyInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
   const [reportDownloading, setReportDownloading] = useState(false);
+  const [reportDate, setReportDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [expandedInquiryId, setExpandedInquiryId] = useState<number | null>(null);
   const [todayOnly, setTodayOnly] = useState(false);
 
@@ -194,7 +195,7 @@ export default function MyPage() {
   const handleDownloadReport = async () => {
     setReportDownloading(true);
     try {
-      await reportApi.downloadDailyReport();
+      await reportApi.downloadDailyReport(reportDate);
     } catch (error) {
       console.error('Failed to download report:', error);
       alert('업무 일지 다운로드에 실패했습니다.');
@@ -377,13 +378,24 @@ export default function MyPage() {
                     />
                     당일 민원만 보기
                   </label>
-                  <button
-                    className="mp-report-btn"
-                    onClick={handleDownloadReport}
-                    disabled={reportDownloading}
-                  >
-                    {reportDownloading ? '생성 중...' : '업무 일지 생성'}
-                  </button>
+                  <div className="mp-report-group">
+                    <input
+                      type="date"
+                      className="mp-report-date"
+                      value={reportDate}
+                      max={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setReportDate(e.target.value)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                    />
+                    <button
+                      className="mp-report-btn"
+                      onClick={handleDownloadReport}
+                      disabled={reportDownloading}
+                    >
+                      {reportDownloading ? '생성 중...' : '업무 일지 생성'}
+                    </button>
+                  </div>
                 </div>
                 <table className="mp-table">
                   <thead>
