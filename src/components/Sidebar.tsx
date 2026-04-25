@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useWiki } from '../context/WikiContext';
 
 function getRelativeTime(dateString: string): string {
@@ -39,17 +39,46 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+// admin 여부에 따라 보여줄 서브메뉴 목록 반환
+function getTimetableSubItems(isAdmin: boolean) {
+  if (isAdmin) {
+    return [
+      { label: '시간표',      path: '/timetable/schedule'  },
+      { label: '시간표 등록', path: '/timetable/register'  },
+      { label: '보강',        path: '/timetable/makeup'    },
+      { label: '강의실',      path: '/timetable/classroom' },
+      { label: '소프트웨어',  path: '/timetable/software'  },
+      { label: '호실별 SW',   path: '/timetable/swstatus'  },
+    ];
+  }
+  return [
+    { label: '시간표', path: '/timetable/schedule' },
+    { label: '보강',   path: '/timetable/makeup'   },
+  ];
+}
+
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { documents } = useWiki();
+  const { documents, currentUser } = useWiki();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isTimetableAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'TA';
+  const isLoggedIn = !!currentUser;
+  const isOnTimetable = location.pathname.startsWith('/timetable');
 
   const recentDocuments = [...documents]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
   const handleLinkClick = (path: string) => {
-    if (path !== '/stats') onClose();
+    if (path !== '/stats' && !path.startsWith('/timetable')) onClose();
     navigate(path);
+  };
+
+  const isSubActive = (subPath: string) => {
+    if (subPath === '/timetable/schedule') {
+      return location.pathname === '/timetable' || location.pathname === '/timetable/schedule';
+    }
+    return location.pathname === subPath;
   };
 
   return (
@@ -60,6 +89,22 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <button className="sidebar-nav-item" onClick={() => handleLinkClick('/stats')}>
             통계 보기
           </button>
+          {isLoggedIn && (
+            <>
+              <button className="sidebar-nav-item" onClick={() => handleLinkClick('/timetable')}>
+                시간표
+              </button>
+              {isOnTimetable && getTimetableSubItems(isTimetableAdmin).map((item) => (
+                <button
+                  key={item.path}
+                  className={`sidebar-nav-item sidebar-nav-subitem${isSubActive(item.path) ? ' active' : ''}`}
+                  onClick={() => handleLinkClick(item.path)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="sidebar-section">

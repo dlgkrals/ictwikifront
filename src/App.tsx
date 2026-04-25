@@ -16,6 +16,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import MyPage from './pages/MyPage';
 import AdminPage from './pages/AdminPage';
+import TimetablePage from './pages/TimetablePage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import './styles/wiki.css';
 
@@ -36,9 +37,13 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 모바일에서 페이지 이동 시 사이드바 닫기 (통계 페이지 제외)
+  // 모바일에서 페이지 이동 시 사이드바 닫기 (통계/시간표 페이지 제외)
   useEffect(() => {
-    if (window.innerWidth <= 768 && location.pathname !== '/stats') {
+    if (
+      window.innerWidth <= 768 &&
+      location.pathname !== '/stats' &&
+      !location.pathname.startsWith('/timetable')
+    ) {
       setSidebarOpen(false);
     }
   }, [location.pathname]);
@@ -85,6 +90,8 @@ function AppContent() {
             <Route path="/my/:tab" element={<MyPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/:tab" element={<AdminPage />} />
+            <Route path="/timetable" element={<TimetablePage />} />
+            <Route path="/timetable/:tab" element={<TimetablePage />} />
             <Route path="/forbidden" element={<ForbiddenPage />} />
           </Routes>
         </main>
