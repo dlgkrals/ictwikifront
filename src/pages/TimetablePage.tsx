@@ -1977,7 +1977,7 @@ export default function TimetablePage() {
                       const dayMakeups = getMakeupsForDay(day);
                       const groups: Record<string, MakeupResponse[]> = {};
                       dayMakeups.forEach((m) => {
-                        const key = `${m.startTime?.slice(0, 5)}~${m.endTime?.slice(0, 5)}`;
+                        const key = m.startTime?.slice(0, 5) ?? '';
                         if (!groups[key]) groups[key] = [];
                         groups[key].push(m);
                       });
