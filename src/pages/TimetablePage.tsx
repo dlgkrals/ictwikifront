@@ -115,6 +115,11 @@ export default function TimetablePage() {
 
   // ─ Common ─
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(() => setMessage(null), 3000);
+    return () => clearTimeout(t);
+  }, [message]);
 
   // ─ Schedule ─
   const [semester, setSemester] = useState(getCurrentSemester());
@@ -122,7 +127,8 @@ export default function TimetablePage() {
   const [schedules, setSchedules] = useState<ScheduleResponse[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [schedDetailModal, setSchedDetailModal] = useState<ScheduleResponse | null>(null);
-  const [schedDeleteLoading, setSchedDeleteLoading] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => Promise<void> } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [unassigned, setUnassigned] = useState<ScheduleResponse[]>([]);
   const [classroomsForAssign, setClassroomsForAssign] = useState<ClassroomResponse[]>([]);
   const [assignMap, setAssignMap] = useState<Record<number, string>>({});
@@ -151,6 +157,7 @@ export default function TimetablePage() {
     day: string; pType: '주' | '야'; period: number; roomNumber: number;
   } | null>(null);
   const [draggingSchedId, setDraggingSchedId] = useState<number | null>(null);
+  const [schedContextMenu, setSchedContextMenu] = useState<{ x: number; y: number; sched: ScheduleResponse } | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [dragOverCell, setDragOverCell] = useState<{
     day: string; pType: '주' | '야'; period: number; roomNumber: number;
@@ -436,30 +443,35 @@ export default function TimetablePage() {
     }
   };
 
-  const handleDeleteAllSchedules = async () => {
-    if (!confirm(`${semester} 학기 전체 시간표를 삭제합니다. 계속하시겠습니까?`)) return;
-    try {
-      await timetableApi.schedules.deleteAllBySemester(semester);
-      setMessage({ type: 'success', text: '전체 시간표가 삭제되었습니다.' });
-      await loadSchedules();
-    } catch {
-      setMessage({ type: 'error', text: '전체 삭제에 실패했습니다.' });
-    }
+  const openConfirm = (title: string, message: string, onConfirm: () => Promise<void>) =>
+    setConfirmModal({ title, message, onConfirm });
+
+  const handleDeleteAllSchedules = () => {
+    openConfirm('전체 시간표 삭제', `${formatSemester(semester)} 전체 시간표를 삭제하시겠습니까?`, async () => {
+      try {
+        await timetableApi.schedules.deleteAllBySemester(semester);
+        setMessage({ type: 'success', text: '전체 시간표가 삭제되었습니다.' });
+        await loadSchedules();
+      } catch {
+        setMessage({ type: 'error', text: '전체 삭제에 실패했습니다.' });
+      }
+    });
   };
 
-  const handleScheduleDelete = async (id: number) => {
-    if (!confirm('이 강의를 삭제하시겠습니까?')) return;
-    setSchedDetailModal(null);
-    setDeleteLoading(id);
-    try {
-      await timetableApi.schedules.delete(id);
-      setMessage({ type: 'success', text: '강의가 삭제되었습니다.' });
-      await loadSchedules();
-    } catch {
-      setMessage({ type: 'error', text: '삭제에 실패했습니다.' });
-    } finally {
-      setDeleteLoading(null);
-    }
+  const handleScheduleDelete = (id: number) => {
+    openConfirm('강의 삭제', '이 강의를 삭제하시겠습니까?', async () => {
+      setSchedDetailModal(null);
+      setDeleteLoading(id);
+      try {
+        await timetableApi.schedules.delete(id);
+        setMessage({ type: 'success', text: '강의가 삭제되었습니다.' });
+        await loadSchedules();
+      } catch {
+        setMessage({ type: 'error', text: '삭제에 실패했습니다.' });
+      } finally {
+        setDeleteLoading(null);
+      }
+    });
   };
 
   const handleSchedChipDelete = async () => {
@@ -584,6 +596,28 @@ export default function TimetablePage() {
     }
   };
 
+  useEffect(() => {
+    if (!schedContextMenu) return;
+    const onDown = () => setSchedContextMenu(null);
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [schedContextMenu]);
+
+  const handleSchedContextDelete = () => {
+    if (!schedContextMenu) return;
+    const sched = schedContextMenu.sched;
+    setSchedContextMenu(null);
+    openConfirm('강의 삭제', `"${sched.courseName}" 강의를 삭제하시겠습니까?`, async () => {
+      try {
+        await timetableApi.schedules.delete(sched.id);
+        setSchedules((prev) => prev.filter((s) => s.id !== sched.id));
+        setMessage({ type: 'success', text: '강의가 삭제되었습니다.' });
+      } catch {
+        setMessage({ type: 'error', text: '삭제에 실패했습니다.' });
+      }
+    });
+  };
+
   const handleSchedDrop = async (day: string, pType: '주' | '야', period: number, roomNumber: number) => {
     if (draggingSchedId === null) return;
     const sched = schedules.find((s) => s.id === draggingSchedId);
@@ -665,8 +699,8 @@ export default function TimetablePage() {
     }
   };
 
-  const handleAutoAssignSoftwares = async () => {
-    if (!confirm(`${formatSemester(semester)} 시간표 기준으로 강의실별 소프트웨어를 자동 배정합니다. 기존 배정이 초기화됩니다. 계속하시겠습니까?`)) return;
+  const handleAutoAssignSoftwares = () => {
+    openConfirm('소프트웨어 자동 배정', `${formatSemester(semester)} 시간표 기준으로 강의실별 소프트웨어를 자동 배정합니다. 기존 배정이 초기화됩니다.`, async () => {
     setAutoSwLoading(true);
     try {
       const result = await timetableApi.classrooms.autoAssignSoftwares(semester);
@@ -678,6 +712,7 @@ export default function TimetablePage() {
     } finally {
       setAutoSwLoading(false);
     }
+    });
   };
 
   // ── Makeup Handlers ──
@@ -836,16 +871,17 @@ export default function TimetablePage() {
     return () => document.removeEventListener('mousedown', onDown);
   }, [openRoomPickerKey]);
 
-  const handleMakeupDelete = async (id: number) => {
-    if (!confirm('이 보강을 삭제하시겠습니까?')) return;
-    try {
-      await timetableApi.makeups.delete(id);
-      setMessage({ type: 'success', text: '보강이 삭제되었습니다.' });
-      setMakeupDetailModal(null);
-      await loadMakeups();
-    } catch {
-      setMessage({ type: 'error', text: '보강 삭제에 실패했습니다.' });
-    }
+  const handleMakeupDelete = (id: number) => {
+    openConfirm('보강 삭제', '이 보강을 삭제하시겠습니까?', async () => {
+      try {
+        await timetableApi.makeups.delete(id);
+        setMessage({ type: 'success', text: '보강이 삭제되었습니다.' });
+        setMakeupDetailModal(null);
+        await loadMakeups();
+      } catch {
+        setMessage({ type: 'error', text: '보강 삭제에 실패했습니다.' });
+      }
+    });
   };
 
   // ── Classroom Handlers ──
@@ -935,15 +971,16 @@ export default function TimetablePage() {
     }
   };
 
-  const handleSwDelete = async (id: number) => {
-    if (!confirm('이 소프트웨어를 삭제하시겠습니까?')) return;
-    try {
-      await timetableApi.softwares.delete(id);
-      setMessage({ type: 'success', text: '소프트웨어가 삭제되었습니다.' });
-      await loadSoftwares();
-    } catch {
-      setMessage({ type: 'error', text: '소프트웨어 삭제에 실패했습니다.' });
-    }
+  const handleSwDelete = (id: number) => {
+    openConfirm('소프트웨어 삭제', '이 소프트웨어를 삭제하시겠습니까?', async () => {
+      try {
+        await timetableApi.softwares.delete(id);
+        setMessage({ type: 'success', text: '소프트웨어가 삭제되었습니다.' });
+        await loadSoftwares();
+      } catch {
+        setMessage({ type: 'error', text: '소프트웨어 삭제에 실패했습니다.' });
+      }
+    });
   };
 
   const handleAliasEdit = (sw: SoftwareResponse) => {
@@ -1080,6 +1117,7 @@ export default function TimetablePage() {
                               }}
                               onDragEnd={() => { setDraggingSchedId(null); setDragOffset(0); setDragOverCell(null); }}
                               onClick={() => { if (!draggingSchedId) setSchedDetailModal(schedInfo); }}
+                              onContextMenu={(e) => { if (!isTimetableAdmin || !editMode) return; e.preventDefault(); setSchedContextMenu({ x: e.clientX, y: e.clientY, sched: schedInfo }); }}
                             >
                               <span className="tt-excel-course">{schedInfo.courseName}</span>
                               <span className="tt-excel-prof">{schedInfo.professor}</span>
@@ -1135,8 +1173,27 @@ export default function TimetablePage() {
       );
     };
 
+    const contextMenuPortal = schedContextMenu && createPortal(
+      <div
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ position: 'fixed', top: schedContextMenu.y, left: schedContextMenu.x, zIndex: 9999, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', minWidth: 120, overflow: 'hidden' }}>
+        <div style={{ padding: '6px 8px', fontSize: '0.75rem', color: '#94a3b8', borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+          {schedContextMenu.sched.courseName}
+        </div>
+        <button
+          style={{ display: 'block', width: '100%', padding: '8px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#ef4444' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fef2f2'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+          onClick={handleSchedContextDelete}>
+          삭제
+        </button>
+      </div>,
+      document.body
+    );
+
     return (
       <div>
+        {contextMenuPortal}
         <div className="tt-section-header">
           <div>
             <h2 className="tt-section-title">시간표</h2>
@@ -2684,6 +2741,24 @@ export default function TimetablePage() {
         </div>
       )}
       {renderContent()}
+      {confirmModal && createPortal(
+        <div className="tt-modal-overlay" onClick={() => { if (!confirmLoading) setConfirmModal(null); }}>
+          <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', width: 360, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }} onClick={(e) => e.stopPropagation()}>
+            <div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{confirmModal.title}</h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.6 }}>{confirmModal.message}</p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="tt-btn tt-btn-outline" onClick={() => setConfirmModal(null)} disabled={confirmLoading}>취소</button>
+              <button className="tt-btn tt-btn-danger" disabled={confirmLoading}
+                onClick={async () => { setConfirmLoading(true); try { await confirmModal.onConfirm(); } finally { setConfirmLoading(false); setConfirmModal(null); } }}>
+                {confirmLoading ? '처리 중...' : '확인'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

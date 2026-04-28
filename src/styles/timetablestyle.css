@@ -102,11 +102,17 @@
 
 /* ── Message Banner ── */
 .tt-message {
-  padding: 12px 16px;
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
-  margin-bottom: 24px;
+  z-index: 10000;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .tt-message-success {
