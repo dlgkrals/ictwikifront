@@ -1,4 +1,7 @@
 import apiClient from './client';
+import type { ScheduleExportResponse } from '../types';
+import { generateScheduleExportExcel } from '../utils/scheduleExportExcel';
+import { parseApplicationExcel, parseTimetableExcel } from '../utils/scheduleImportParser';
 
 // ── Types ──────────────────────────────────────────
 
@@ -212,27 +215,17 @@ export const timetableApi = {
     deleteAllBySemester: async (semester: string): Promise<void> => {
       await apiClient.delete('/api/schedules', { params: { semester } });
     },
-    importApplication: async (semester: string, file: File): Promise<ScheduleResponse[]> => {
-      const form = new FormData();
-      // 한글 파일명은 multipart 전송 시 인코딩 오류 발생 → ASCII 이름으로 교체
-      const safeFile = new File([file], 'application_import.xlsx', { type: file.type });
-      form.append('file', safeFile);
-      form.append('semester', semester);
-      const res = await apiClient.post<ScheduleResponse[]>('/api/schedules/import/application', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+    importApplication: async (semester: string, file: File): Promise<void> => {
+      const rows = await parseApplicationExcel(file);
+      await apiClient.post('/api/schedules/import/application', rows, {
+        params: { semester },
       });
-      return res.data;
     },
-    importTimetable: async (semester: string, file: File): Promise<ScheduleResponse[]> => {
-      const form = new FormData();
-      // 한글 파일명은 multipart 전송 시 인코딩 오류 발생 → ASCII 이름으로 교체
-      const safeFile = new File([file], 'timetable_import.xlsx', { type: file.type });
-      form.append('file', safeFile);
-      form.append('semester', semester);
-      const res = await apiClient.post<ScheduleResponse[]>('/api/schedules/import/timetable', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+    importTimetable: async (semester: string, file: File): Promise<void> => {
+      const rows = await parseTimetableExcel(file);
+      await apiClient.post('/api/schedules/import/timetable', rows, {
+        params: { semester },
       });
-      return res.data;
     },
     getUnassigned: async (): Promise<ScheduleResponse[]> => {
       const res = await apiClient.get<ScheduleResponse[]>('/api/schedules/import/unassigned');
@@ -242,12 +235,11 @@ export const timetableApi = {
       const res = await apiClient.patch<ScheduleResponse>(`/api/schedules/import/${id}/assign`, { classroomId });
       return res.data;
     },
-    exportExcel: async (semester: string): Promise<Blob> => {
-      const res = await apiClient.get('/api/schedules/export', {
+    exportExcel: async (semester: string): Promise<void> => {
+      const res = await apiClient.get<ScheduleExportResponse>('/api/schedules/export', {
         params: { semester },
-        responseType: 'blob',
       });
-      return res.data;
+      await generateScheduleExportExcel(res.data);
     },
   },
 

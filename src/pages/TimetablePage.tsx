@@ -431,13 +431,7 @@ export default function TimetablePage() {
 
   const handleExportExcel = async () => {
     try {
-      const blob = await timetableApi.schedules.exportExcel(semester);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${semester}_시간표.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await timetableApi.schedules.exportExcel(semester);
     } catch {
       setMessage({ type: 'error', text: '엑셀 다운로드에 실패했습니다.' });
     }

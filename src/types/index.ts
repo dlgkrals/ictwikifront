@@ -505,6 +505,69 @@ export interface InquiryFilters {
   method: InquiryMethodLabel | '전체';
 }
 
+// ===== Schedule Export =====
+export interface ScheduleExportCellData {
+  courseName: string;
+  professor: string;
+  grade: string;
+  section: string;
+  rowSpan: number;
+}
+
+export interface ScheduleExportPeriodRow {
+  periodLabel: string;
+  cells: Record<string, ScheduleExportCellData | null>;
+}
+
+export interface ScheduleExportNightGroup {
+  periodLabels: string[];
+  cells: Record<string, ScheduleExportCellData | null>;
+}
+
+export interface ScheduleExportDayData {
+  day: string;
+  label: string;
+  dayPeriods: ScheduleExportPeriodRow[];
+  nightGroups: ScheduleExportNightGroup[];
+}
+
+export interface ScheduleExportFloorData {
+  name: string;
+  rooms: number[];
+  days: ScheduleExportDayData[];
+}
+
+export interface ScheduleExportResponse {
+  semester: string;
+  floors: ScheduleExportFloorData[];
+}
+
+// ===== Daily Report =====
+export interface DailyReportLocationLine {
+  building: string;
+  room: string;
+}
+
+export interface DailyReportInquiryRowData {
+  locations: DailyReportLocationLine[];
+  receivedTime: string;
+  description: string;
+  solution: string;
+  completedTime: string;
+  status: string;
+}
+
+export interface DailyReportResponse {
+  date: string;
+  userName: string;
+  userRole: string;
+  sheetName: string;
+  allSection: DailyReportInquiryRowData[];
+  topCount: number;
+  inProgressSection: DailyReportInquiryRowData[];
+  bottomCount: number;
+}
+
 // ===== Helper Functions =====
 export function toInquiryDisplay(inquiry: Inquiry): InquiryDisplay {
   return {
