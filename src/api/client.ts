@@ -56,9 +56,14 @@ apiClient.interceptors.response.use(
         window.dispatchEvent(new CustomEvent('session-expired'));
       }
     } else if (status === 403) {
-      if (!isLoginUrl) {
-        window.dispatchEvent(new CustomEvent('access-denied'));
-      }
+        if (!isLoginUrl) {
+            const msg = error.response?.data?.message;
+            if (typeof msg === 'string' && msg.includes('데모 계정은 읽기 전용')) {
+                window.dispatchEvent(new CustomEvent('demo-readonly', { detail: msg }));
+            } else {
+                window.dispatchEvent(new CustomEvent('access-denied'));
+            }
+        }
     }
 
     return Promise.reject(error);

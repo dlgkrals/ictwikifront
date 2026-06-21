@@ -37,6 +37,15 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const handleDemoReadonly = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      alert(detail || '데모 계정은 읽기 전용입니다. 작성·수정·삭제는 제한됩니다.');
+    };
+    window.addEventListener('demo-readonly', handleDemoReadonly);
+    return () => window.removeEventListener('demo-readonly', handleDemoReadonly);
+  }, []);
+
   // 모바일에서 페이지 이동 시 사이드바 닫기 (통계/시간표 페이지 제외)
   useEffect(() => {
     if (
