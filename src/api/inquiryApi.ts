@@ -8,6 +8,12 @@ import type {
   InquiryTypeEnum,
 } from '../types';
 
+export interface CursorPageResponse<T> {
+  content: T[];
+  nextCursor: number | null;
+  hasNext: boolean;
+}
+
 interface InquiryStatistics {
   total: number;
   pending: number;
@@ -42,10 +48,20 @@ export const inquiryApi = {
     return response.data;
   },
 
-  // 전체 목록 조회
-  getAll: async (): Promise<Inquiry[]> => {
-    const response = await apiClient.get<Inquiry[]>('/api/inquiries');
+  // 커서 기반 페이지 조회 (무한 스크롤용)
+  getPage: async (cursor?: number, size: number = 20): Promise<CursorPageResponse<Inquiry>> => {
+    const response = await apiClient.get<CursorPageResponse<Inquiry>>('/api/inquiries', {
+      params: { cursor, size },
+    });
     return response.data;
+  },
+
+  // 전체 목록 조회 (첫 페이지)
+  getAll: async (): Promise<Inquiry[]> => {
+    const response = await apiClient.get<CursorPageResponse<Inquiry>>('/api/inquiries', {
+      params: { size: 20 },
+    });
+    return response.data.content;
   },
 
   // 단건 조회

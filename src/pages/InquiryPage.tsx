@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, Fragment, type FormEvent, type MouseEvent } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type FormEvent, type MouseEvent } from 'react';
 import '../styles/newwikistyle.css';
 import { LinkItUrl } from 'react-linkify-it';
 import { useWiki, INQUIRY_TYPES, INQUIRY_STATUS, INQUIRY_METHOD } from '../context/WikiContext';
@@ -149,8 +149,48 @@ const emptyForm: InquiryFormData = {
   solution: '',
 };
 
+const PAGE_SIZE = 20;
+
 export default function InquiryPage() {
-  const { inquiries, addInquiry, updateInquiry, deleteInquiry, fetchInquiries, staffUsers, fetchStaffUsers } = useWiki();
+  const { addInquiry, updateInquiry, deleteInquiry, staffUsers, fetchStaffUsers } = useWiki();
+
+  const [items, setItems] = useState<Inquiry[]>([]);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [hasNext, setHasNext] = useState(true);
+  const [initialized, setInitialized] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
+
+  const loadPage = useCallback(async (cursor: number | null, reset = false) => {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    setLoadingMore(true);
+    try {
+      const page = await inquiryApi.getPage(cursor === null ? undefined : cursor, PAGE_SIZE);
+      setItems(prev => reset ? page.content : [...prev, ...page.content]);
+      setNextCursor(page.nextCursor);
+      setHasNext(page.hasNext);
+      setInitialized(true);
+    } finally {
+      isLoadingRef.current = false;
+      setLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => { loadPage(null, true); }, [loadPage]);
+
+  useEffect(() => {
+    if (!initialized || !hasNext) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadPage(nextCursor);
+    }, { rootMargin: '200px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [initialized, hasNext, nextCursor, loadPage]);
+
   const [statusOptions, setStatusOptions] = useState<InquiryStatusOption[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<InquiryFormData>(emptyForm);
@@ -184,10 +224,10 @@ export default function InquiryPage() {
 
   const workers = useMemo(() => {
     const workerSet = new Set(
-      inquiries.map((inq) => inq.workerName).filter((w): w is string => Boolean(w))
+      items.map((inq) => inq.workerName).filter((w): w is string => Boolean(w))
     );
     return Array.from(workerSet).sort();
-  }, [inquiries]);
+  }, [items]);
 
   const filteredInquiries = useMemo(() => {
     const todayStart = new Date();
@@ -195,7 +235,7 @@ export default function InquiryPage() {
     const todayEnd = new Date(todayStart);
     todayEnd.setDate(todayStart.getDate() + 1);
 
-    return inquiries.filter((inq) => {
+    return items.filter((inq) => {
       const statusLabel = INQUIRY_STATUS_MAP[inq.status];
       const typeLabel = INQUIRY_TYPE_MAP[inq.type];
       const methodLabel = inq.method ? INQUIRY_METHOD_MAP[inq.method] : '';
@@ -210,7 +250,7 @@ export default function InquiryPage() {
       }
       return true;
     });
-  }, [inquiries, filters, todayOnly]);
+  }, [items, filters, todayOnly]);
 
   const handleFilterChange = (key: keyof InquiryFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -260,6 +300,7 @@ export default function InquiryPage() {
     await addInquiry(request);
     setFormData(emptyForm);
     setShowForm(false);
+    await loadPage(null, true);
   };
 
   const handleChange = (field: keyof InquiryFormData, value: string | number | null | LocationGroup[]) => {
@@ -329,6 +370,7 @@ export default function InquiryPage() {
       await updateInquiry(editingId, updates);
       setEditingId(null);
       setEditData(emptyForm);
+      await loadPage(null, true);
     }
   };
 
@@ -370,13 +412,14 @@ export default function InquiryPage() {
     if (window.confirm('정말로 이 민원을 삭제하시겠습니까?')) {
       await deleteInquiry(id);
       setExpandedId(null);
+      await loadPage(null, true);
     }
   };
 
   const handleComplete = async (id: number, e: MouseEvent) => {
     e.stopPropagation();
     await inquiryApi.complete(id);
-    await fetchInquiries();
+    await loadPage(null, true);
   };
 
   const handleRagClick = async (inquiryId: number, e: MouseEvent) => {
@@ -720,8 +763,8 @@ export default function InquiryPage() {
 
       <div className="inquiry-stats">
         {activeFilterCount > 0
-          ? `${filteredInquiries.length}건 표시 중 / 전체 ${inquiries.length}건`
-          : `전체 ${inquiries.length}건`}
+          ? `${filteredInquiries.length}건 표시 중 / 로드된 ${items.length}건${hasNext ? ' (스크롤하여 더 보기)' : ''}`
+          : `${items.length}건${hasNext ? ' (스크롤하여 더 보기)' : ''}`}
       </div>
 
       {/* 모바일 카드 뷰 */}
@@ -1320,6 +1363,13 @@ export default function InquiryPage() {
         </tbody>
       </table>
       </div>
+
+      {loadingMore && (
+        <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary, #888)', fontSize: '0.875rem' }}>
+          불러오는 중...
+        </div>
+      )}
+      <div ref={sentinelRef} style={{ height: 1 }} />
     </div>
   );
 }

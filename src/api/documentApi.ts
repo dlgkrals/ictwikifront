@@ -1,11 +1,22 @@
 import apiClient from './client';
 import type { Document, DocumentSummary, DocumentCreateRequest, DocumentUpdateRequest, DocumentHistory, DocumentLink } from '../types';
+import type { CursorPageResponse } from './inquiryApi';
 
 export const documentApi = {
-  // 전체 문서 목록 조회
-  getAll: async (): Promise<DocumentSummary[]> => {
-    const response = await apiClient.get<DocumentSummary[]>('/api/documents');
+  // 커서 기반 페이지 조회 (무한 스크롤용)
+  getPage: async (cursor?: number, size: number = 30): Promise<CursorPageResponse<DocumentSummary>> => {
+    const response = await apiClient.get<CursorPageResponse<DocumentSummary>>('/api/documents', {
+      params: { cursor, size },
+    });
     return response.data;
+  },
+
+  // 전체 문서 목록 조회 (첫 페이지)
+  getAll: async (): Promise<DocumentSummary[]> => {
+    const response = await apiClient.get<CursorPageResponse<DocumentSummary>>('/api/documents', {
+      params: { size: 50 },
+    });
+    return response.data.content;
   },
 
   // 단건 조회

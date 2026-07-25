@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, Fragment, type FormEvent, type MouseEvent } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, Fragment, type FormEvent, type MouseEvent } from 'react';
 import '../styles/homestyle.css';
 import { Link } from 'react-router-dom';
 import { LinkItUrl } from 'react-linkify-it';
@@ -121,13 +121,52 @@ function getRelativeTime(dateString: string): string {
 }
 
 
+const DOC_PAGE_SIZE = 30;
+
 export default function Home() {
   const {
-    notices, inquiries, documents,
+    notices, inquiries,
     addInquiry, updateInquiry, deleteInquiry, fetchInquiries,
     staffUsers, fetchStaffUsers,
     fetchDocuments,
   } = useWiki();
+
+  const [docItems, setDocItems] = useState<DocumentSummary[]>([]);
+  const [docNextCursor, setDocNextCursor] = useState<number | null>(null);
+  const [docHasNext, setDocHasNext] = useState(true);
+  const [docInitialized, setDocInitialized] = useState(false);
+  const [docLoadingMore, setDocLoadingMore] = useState(false);
+  const docSentinelRef = useRef<HTMLDivElement>(null);
+  const docIsLoadingRef = useRef(false);
+
+  const loadDocPage = useCallback(async (cursor: number | null, reset = false) => {
+    if (docIsLoadingRef.current) return;
+    docIsLoadingRef.current = true;
+    setDocLoadingMore(true);
+    try {
+      const page = await documentApi.getPage(cursor === null ? undefined : cursor, DOC_PAGE_SIZE);
+      setDocItems(prev => reset ? page.content : [...prev, ...page.content]);
+      setDocNextCursor(page.nextCursor);
+      setDocHasNext(page.hasNext);
+      setDocInitialized(true);
+    } finally {
+      docIsLoadingRef.current = false;
+      setDocLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => { loadDocPage(null, true); }, [loadDocPage]);
+
+  useEffect(() => {
+    if (!docInitialized || !docHasNext) return;
+    const sentinel = docSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadDocPage(docNextCursor);
+    }, { rootMargin: '200px' });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [docInitialized, docHasNext, docNextCursor, loadDocPage]);
 
   const [statusOptions, setStatusOptions] = useState<InquiryStatusOption[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -328,6 +367,7 @@ export default function Home() {
       const [data] = await Promise.all([
         documentApi.getDeletedDocuments(),
         fetchDocuments(),
+        loadDocPage(null, true),
       ]);
       setDeletedDocs(data);
     } catch (err: unknown) {
@@ -794,7 +834,7 @@ export default function Home() {
                 ? DOCUMENT_CATEGORIES.filter(cat => cat.code === selectedCategory)
                 : DOCUMENT_CATEGORIES
               ).map((cat) => {
-                const categoryDocs = documents.filter(doc => doc.categoryCode === cat.code);
+                const categoryDocs = docItems.filter(doc => doc.categoryCode === cat.code);
                 if (categoryDocs.length === 0) return null;
                 return (
                   <div key={cat.code} className="home-doc-group">
@@ -812,9 +852,15 @@ export default function Home() {
                   </div>
                 );
               })}
-              {documents.length === 0 && (
+              {docInitialized && docItems.length === 0 && (
                 <p className="empty-message">등록된 문서가 없습니다.</p>
               )}
+              {docLoadingMore && (
+                <div style={{ textAlign: 'center', padding: '0.5rem', color: 'var(--text-secondary, #888)', fontSize: '0.8rem' }}>
+                  불러오는 중...
+                </div>
+              )}
+              <div ref={docSentinelRef} style={{ height: 1 }} />
             </div>
           </div>
         </div>
